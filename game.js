@@ -7,6 +7,7 @@ function loadIt(url) {
 			url,
 			(gltf) => {
 				const obj = gltf.scene;
+				console.log(obj);
 				resolve(obj);
 			},
 			undefined,
