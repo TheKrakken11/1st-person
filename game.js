@@ -7,7 +7,11 @@ function loadIt(url) {
 			url,
 			(gltf) => {
 				const obj = gltf.scene;
-				console.log(obj);
+				obj.traverse((child) => {
+					if (child.isMesh) {
+						child.material = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+					}
+				});
 				resolve(obj);
 			},
 			undefined,
