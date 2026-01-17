@@ -14,7 +14,10 @@ function loadIt(url) {
 		);
 	});
 }
-let ground
+let ground;
+let scene;
+let camera;
+let renderer;
 async function init3d() {
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color(0x87ceeb);
