@@ -1,4 +1,5 @@
 import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
+import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/environments/RoomEnvironment.js';
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model;
@@ -28,7 +29,15 @@ async function init3d() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   document.body.appendChild(renderer.domElement);
+  renderer.physicallyCorrectLights = true;
 
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmremGenerator.fromScene(
+    new RoomEnvironment(),
+    0.04
+  ).texture;
+
+  pmremGenerator.dispose();
   // Lighting (Don McCurdy–style defaults)
   scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
