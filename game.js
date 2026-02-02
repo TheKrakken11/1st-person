@@ -58,6 +58,10 @@ async function init3d() {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
+      if (child.material) {
+        child.material.vertexColors = true;
+        child.material.needsUpdate = true;
+      }
     }
   });
 
