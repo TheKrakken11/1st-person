@@ -36,6 +36,7 @@ async function init3d() {
     new RoomEnvironment(),
     0.04
   ).texture;
+  scene.environmentIntensity = 0.7;
 
   pmremGenerator.dispose();
   // Lighting (Don McCurdy–style defaults)
