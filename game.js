@@ -65,6 +65,8 @@ async function init3d() {
       console.log('  type: ', m.type);
       console.log('  color: ', m.color?.getHexString());
       console.log('  map: ', m.map);
+      console.log('  uv: ', !!child.geometry.attributes.uv);
+      console.log('  uv2: ', !!child.geometry.attributes.uv2);
       console.log('  baseColorTexture: ',
                   m.map ? 'YES' : 'NO'
                   );
