@@ -1,6 +1,6 @@
 import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
 import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/environments/RoomEnvironment.js?module';
-import { SubdivisionModifier } from 'https://unpkg.com/three@0.168.0/examples/jsm/modifiers/SubdivisionModifier.js';
+import { SubdivisionModifier } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/modifiers/SubdivisionModifier.js';
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model;
