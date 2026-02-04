@@ -1,6 +1,5 @@
 import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
 import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/environments/RoomEnvironment.js?module';
-import { SubdivisionModifier } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/modifiers/SubdivisionModifier.js';
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model;
@@ -59,8 +58,6 @@ async function init3d() {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
-      const mod = new SubdivisionModifier(1);
-      child.geometry = mod.modify(child.geometry);
       const m = child.material;
       console.log('Mesh: ', child.name);
       console.log('  type: ', m.type);
