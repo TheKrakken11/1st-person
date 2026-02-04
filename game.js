@@ -67,6 +67,11 @@ async function init3d() {
       console.log('  map: ', m.map);
       console.log('  uv: ', !!child.geometry.attributes.uv);
       console.log('  uv2: ', !!child.geometry.attributes.uv2);
+      console.log('  color_0 attribute: ', child.geometry.attributes.color);
+      console.log('  first vertex color: ',
+                  child.geometry.attributes.color.getX(0),
+                  child.geometry.attributes.color.getY(0),
+                  child.geometry.attributes.color.getZ(0)
       console.log('  baseColorTexture: ',
                   m.map ? 'YES' : 'NO'
                   );
