@@ -64,7 +64,7 @@ import {
 	VectorKeyframeTrack,
 	SRGBColorSpace,
 	InstancedBufferAttribute
-} from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+} from 'https://unpkg.com/three@0.168.0/build/three.module.js';
 import { toTrianglesDrawMode } from './BufferGeometryUtils.js';
 
 /**
