@@ -73,7 +73,7 @@ async function init3d() {
                   );
     }
   });
-  model.position.y == 10
+  model.position.y = 100
   scene.add(model);
 
   // Optional grid for scale reference
