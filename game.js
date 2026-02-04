@@ -72,6 +72,7 @@ async function init3d() {
                   child.geometry.attributes.color.getX(0),
                   child.geometry.attributes.color.getY(0),
                   child.geometry.attributes.color.getZ(0)
+                  ),
       console.log('  baseColorTexture: ',
                   m.map ? 'YES' : 'NO'
                   );
