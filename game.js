@@ -18,7 +18,7 @@ async function init3d() {
     0.1,
     1000
   );
-  camera.position.set(40, 40, 40);
+  camera.position.set(20, 20, 20);
   camera.lookAt(0, 0, 0);
 
   // Renderer
@@ -72,8 +72,7 @@ async function init3d() {
                   );
     }
   });
-  model.position.y = 1150;
-  model.scale.set(50, 50, 50);
+  model.position.y = 23
   scene.add(model);
 
   // Optional grid for scale reference
