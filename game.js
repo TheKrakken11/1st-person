@@ -39,7 +39,6 @@ async function init3d() {
   scene.environmentIntensity = 0.7;
 
   pmremGenerator.dispose();
-  // Lighting (Don McCurdy–style defaults)
   scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -73,7 +72,7 @@ async function init3d() {
                   );
     }
   });
-  model.position.y = 20
+  model.position.y = 25
   scene.add(model);
 
   // Optional grid for scale reference
