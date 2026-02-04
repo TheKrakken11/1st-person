@@ -18,7 +18,7 @@ async function init3d() {
     0.1,
     1000
   );
-  camera.position.set(20, 20, 20);
+  camera.position.set(40, 40, 40);
   camera.lookAt(0, 0, 0);
 
   // Renderer
