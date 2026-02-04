@@ -72,7 +72,7 @@ async function init3d() {
                   );
     }
   });
-  model.position.y = 23;
+  model.position.y = 1150;
   model.scale.set(50, 50, 50);
   scene.add(model);
 
