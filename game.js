@@ -58,6 +58,15 @@ async function init3d() {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
+
+      const m = child.material;
+      console.log('Mesh: ', child.name);
+      console.log('  type: ', m.type);
+      console.log('  color: ', m.color?.getHexString());
+      console.log('  map: ', m.map);
+      console.log('  baseColorTexture: ',
+                  m.map ? 'YES' : 'NO'
+                  );
     }
   });
 
