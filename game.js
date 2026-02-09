@@ -71,8 +71,7 @@ async function init3d() {
                   );
     }
   });
-  model.position.y = -10
-  model.scale.set(100, 100, 100)
+  model.scale.set(50, 50, 50)
   scene.add(model);
   // Optional grid for scale reference
   scene.add(new THREE.GridHelper(100, 20));
