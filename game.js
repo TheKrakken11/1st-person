@@ -19,7 +19,7 @@ async function init3d() {
     0.1,
     1000
   );
-  camera.position.set(0, 1000, 0);
+  camera.position.set(0, 700, 0);
   camera.lookAt(0, 0, 0);
 
   // Renderer
@@ -97,7 +97,7 @@ async function init3d() {
 function animate() {
   requestAnimationFrame(animate);
   model.scale.set(scale, scale, scale);
-  model.position.y = scale*-10
+  model.position.y = -scale-10
   renderer.render(scene, camera);
 }
 
