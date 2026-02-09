@@ -18,7 +18,7 @@ async function init3d() {
     0.1,
     1000
   );
-  camera.position.set(20, 20, 20);
+  camera.position.set(0, 20, 0);
   camera.lookAt(0, 0, 0);
 
   // Renderer
@@ -71,10 +71,11 @@ async function init3d() {
                   );
     }
   });
-  model.position.y = 23
+  model.position.y = -10
+  model.scale.set(10, 10, 10)
   scene.add(model);
   // Optional grid for scale reference
-  scene.add(new THREE.GridHelper(50, 50));
+  scene.add(new THREE.GridHelper(100, 20));
 
   window.addEventListener('resize', onWindowResize);
   document.getElementById('loading')?.remove();
