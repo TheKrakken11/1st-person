@@ -3,6 +3,7 @@ import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/en
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model;
+let scale = 1;
 
 init3d();
 
@@ -71,18 +72,31 @@ async function init3d() {
                   );
     }
   });
-  model.scale.set(50, 50, 50)
   scene.add(model);
   // Optional grid for scale reference
-  scene.add(new THREE.GridHelper(100, 20));
+  scene.add(new THREE.GridHelper(100, 100));
 
   window.addEventListener('resize', onWindowResize);
+  document.addEventListener('keydown', (event) => {
+    switch (event.key) {
+      case 'ArrowUp':
+        scale+=1;
+        break;
+      case 'ArrowDown':
+        scale-=1;
+        break;
+      case 'l':
+        console.log("Scale:", scale);
+        break;
+    }
+  });
   document.getElementById('loading')?.remove();
   animate();
 }
 
 function animate() {
   requestAnimationFrame(animate);
+  model.scale.set(scale, scale, scale);
   renderer.render(scene, camera);
 }
 
