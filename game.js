@@ -18,6 +18,8 @@ async function init3d() {
     0.1,
     1000
   );
+  camera.far = 10000;
+  camera.updateProjectionMatrix();
   camera.position.set(0, 700, 0);
   camera.lookAt(0, 0, 0);
 
