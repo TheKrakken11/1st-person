@@ -3,8 +3,7 @@ import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/en
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model;
-let scale = 1;
-
+let height = 700
 init3d();
 
 async function init3d() {
@@ -80,13 +79,10 @@ async function init3d() {
   document.addEventListener('keydown', (event) => {
     switch (event.key) {
       case 'ArrowUp':
-        scale+=1;
+        height+=1;
         break;
       case 'ArrowDown':
-        scale-=1;
-        break;
-      case 'l':
-        console.log("Scale:", scale);
+        height-=1;
         break;
     }
   });
@@ -96,8 +92,8 @@ async function init3d() {
 
 function animate() {
   requestAnimationFrame(animate);
-  model.scale.set(scale, scale, scale);
-  model.position.y = -scale-10
+  model.scale.set(150, 150, 150);
+  camera.position.set(0, height, 0);
   renderer.render(scene, camera);
 }
 
