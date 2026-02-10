@@ -79,10 +79,10 @@ async function init3d() {
   document.addEventListener('keydown', (event) => {
     switch (event.key) {
       case 'ArrowUp':
-        height+=1;
+        height+=100;
         break;
       case 'ArrowDown':
-        height-=1;
+        height-=100;
         break;
     }
   });
