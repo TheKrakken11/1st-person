@@ -1,6 +1,8 @@
 import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
 import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/environments/RoomEnvironment.js?module';
+import { LoopSubdivision } from 'https://unpkg.com/three-subdivide@1.1.5/build/index.module.js';
 import { GLTFLoader } from './GLTFLoader.js';
+import * as BufferGeometryUtils from './BufferGeometryUtils.js';
 
 let scene, camera, renderer, model;
 let height = 700
@@ -60,6 +62,13 @@ async function init3d() {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
+      const g = child.geometry;
+      if (!g.index) {
+        g = THREE.BufferGeometryUtils.mergeVertices(geometry);
+      }
+      const subdiv = LoopSubdivision.modify(geometry, 1);
+      g = subdiv;
+      child.geometry.computeVertexNormals();
       const m = child.material;
       console.log('Mesh: ', child.name);
       console.log('  type: ', m.type);
