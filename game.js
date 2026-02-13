@@ -1,8 +1,6 @@
 import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
 import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/environments/RoomEnvironment.js?module';
-import { LoopSubdivision } from 'https://unpkg.com/three-subdivide@1.1.5/build/index.module.js';
 import { GLTFLoader } from './GLTFLoader.js';
-import * as BufferGeometryUtils from './BufferGeometryUtils.js';
 
 let scene, camera, renderer, model;
 let height = 700
@@ -62,26 +60,22 @@ async function init3d() {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
-      const g = child.geometry;
-      if (!g.index) {
-        g = THREE.BufferGeometryUtils.mergeVertices(g);
+      child.geometry.computeVertexNormals();
+      const m = child.material;
+      m.flatShading = false;
+      if (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) {
+        m.metalness = 0.0;
+        m.roughness = 1.0;
+        m.envMap = null;
       }
-      const subdiv = LoopSubdivision.modify(g, 1);
-      subdiv.computeVertexNormals();
-      const newchild = new THREE.Mesh(subdiv, child.material);
-      newchild.position.copy(child.position);
-      newchild.rotation.copy(child.rotation);
-      newchild.scale.copy(child.scale);
-      child.parent.add(newchild);
-      child.parent.remove(child);
-      const m = newchild.material;
-      console.log('Mesh: ', newchild.name);
+      m.needsUpdate = true;
+      console.log('Mesh: ', child.name);
       console.log('  type: ', m.type);
       console.log('  color: ', m.color?.getHexString());
       console.log('  map: ', m.map);
-      console.log('  uv: ', !!newchild.geometry.attributes.uv);
-      console.log('  uv2: ', !!newchild.geometry.attributes.uv2);
-      console.log('  color_0 attribute: ', newchild.geometry.attributes.color);
+      console.log('  uv: ', !!child.geometry.attributes.uv);
+      console.log('  uv2: ', !!child.geometry.attributes.uv2);
+      console.log('  color_0 attribute: ', child.geometry.attributes.color);
       console.log('  baseColorTexture: ',
                   m.map ? 'YES' : 'NO'
                   );
