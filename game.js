@@ -83,7 +83,7 @@ async function init3d() {
   });
   scene.add(model);
   // Optional grid for scale reference
-  scene.add(new THREE.GridHelper(100, 100));
+  // scene.add(new THREE.GridHelper(100, 100));
 
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('keydown', (event) => {
