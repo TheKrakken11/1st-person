@@ -67,16 +67,21 @@ async function init3d() {
         g = THREE.BufferGeometryUtils.mergeVertices(g);
       }
       const subdiv = LoopSubdivision.modify(g, 1);
-      g = subdiv;
-      child.geometry.computeVertexNormals();
-      const m = child.material;
-      console.log('Mesh: ', child.name);
+      subdiv.computeVertexNormals();
+      const newchild = new THREE.Mesh(subdiv, child.material);
+      newchild.position.copy(child.position);
+      newchild.rotation.copy(child.rotation);
+      newchild.scale.copy(child.scale);
+      child.parent.add(newchild);
+      child.parent.remove(child);
+      const m = newchild.material;
+      console.log('Mesh: ', newchild.name);
       console.log('  type: ', m.type);
       console.log('  color: ', m.color?.getHexString());
       console.log('  map: ', m.map);
-      console.log('  uv: ', !!child.geometry.attributes.uv);
-      console.log('  uv2: ', !!child.geometry.attributes.uv2);
-      console.log('  color_0 attribute: ', child.geometry.attributes.color);
+      console.log('  uv: ', !!newchild.geometry.attributes.uv);
+      console.log('  uv2: ', !!newchild.geometry.attributes.uv2);
+      console.log('  color_0 attribute: ', newchild.geometry.attributes.color);
       console.log('  baseColorTexture: ',
                   m.map ? 'YES' : 'NO'
                   );
