@@ -103,7 +103,7 @@ async function init3d() {
 function animate() {
   requestAnimationFrame(animate);
   model.scale.set(150, 150, 150);
-  model.position.y = 1500
+  model.position.y = 3000
   camera.position.set(0, height, 0);
   renderer.render(scene, camera);
 }
