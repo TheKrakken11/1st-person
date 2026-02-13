@@ -64,9 +64,9 @@ async function init3d() {
       child.receiveShadow = true;
       const g = child.geometry;
       if (!g.index) {
-        g = THREE.BufferGeometryUtils.mergeVertices(geometry);
+        g = THREE.BufferGeometryUtils.mergeVertices(g);
       }
-      const subdiv = LoopSubdivision.modify(geometry, 1);
+      const subdiv = LoopSubdivision.modify(g, 1);
       g = subdiv;
       child.geometry.computeVertexNormals();
       const m = child.material;
