@@ -111,7 +111,7 @@ async function init3d() {
   plane.position.y = 680;
   plane.scale.set(0.3048, 0.3048, 0.3048);
   thrust.play();
-  const camOff = new THREE.Vector3(0, 3, -10);
+  const camOff = new THREE.Vector3(0, 5, 15);
   plane.add(camera);
   camera.position.copy(camOff);
   
