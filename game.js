@@ -98,6 +98,13 @@ async function init3d() {
   fire = createCombinedClip(animations, [
     "fire0", "fire1", "fire2", "fire3"
     ], "fire");
+  if (!thrust) {
+    console.error("Thrust animations not found!");
+  } else if (!land) {
+    console.error("Landing animations not found!");
+  } else if (!fire) {
+    console.error("Fire animations not found!");
+  }
   scene.add(plane);
   plane.position.y = 680;
   thrust.play();
