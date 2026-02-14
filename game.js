@@ -20,7 +20,6 @@ async function init3d() {
   camera.far = 10000;
   camera.updateProjectionMatrix();
   camera.position.set(0, 700, 0);
-  camera.lookAt(0, 0, 0);
 
   // Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -81,6 +80,8 @@ async function init3d() {
     }
   });
   scene.add(model);
+  model.scale.set(150, 150, 150);
+  model.position.y = 3000;
   // Optional grid for scale reference
   // scene.add(new THREE.GridHelper(100, 100));
   // Load jet
@@ -144,8 +145,7 @@ function createCombinedClip(allClips, names, newName) {
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
-  model.scale.set(150, 150, 150);
-  model.position.y = 3000
+  camera.lookAt(plane.position.x, plane.position.y, plane.position.z);
   const delta = clock.getDelta();
   mixer.update(delta);
   renderer.render(scene, camera);
