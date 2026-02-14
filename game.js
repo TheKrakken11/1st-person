@@ -3,7 +3,6 @@ import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/en
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model, plane, mixer, thrust, land, fire;
-let height = 700
 init3d();
 
 async function init3d() {
@@ -110,16 +109,18 @@ async function init3d() {
   }
   scene.add(plane);
   plane.position.y = 680;
+  plane.scale.set(0.3048, 0.3048, 0.3048);
   thrust.play();
+  const camOff = new THREE.Vector3(0, 3, -10);
+  plane.add(camera);
+  camera.position.copy(camOff);
   
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('keydown', (event) => {
     switch (event.key) {
       case 'ArrowUp':
-        height+=100;
         break;
       case 'ArrowDown':
-        height-=100;
         break;
     }
   });
@@ -145,7 +146,6 @@ function animate() {
   requestAnimationFrame(animate);
   model.scale.set(150, 150, 150);
   model.position.y = 3000
-  camera.position.set(0, height, 0);
   const delta = clock.getDelta();
   mixer.update(delta);
   renderer.render(scene, camera);
