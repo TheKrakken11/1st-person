@@ -89,15 +89,18 @@ async function init3d() {
   plane = obj.scene;
   mixer = new THREE.AnimationMixer(plane);
   const animations = obj.animations;
-  thrust = createCombinedClip(animations, [
+  const thrustbase = createCombinedClip(animations, [
     "thrust0", "thrust1", "thrust2", "thrust3", "thrust4", "thrust5", "thrust6", "thrust7", "thrust8", "thrust9"
     ], "thrust");
-  land = createCombinedClip(animations, [
+  const landbase = createCombinedClip(animations, [
     "landing11", "landing12", "landing13", "landing14", "landing15", "landing16", "landing17", "landing18", "landing21", "landing22", "landing23", "landing31", "landing32", "landing33"
     ], "land");
-  fire = createCombinedClip(animations, [
+  const firebase = createCombinedClip(animations, [
     "fire0", "fire1", "fire2", "fire3"
     ], "fire");
+  thrust = mixer.clipAction(thrustbase);
+  land = mixer.clipAction(landbase);
+  fire = mixer.clipAction(firebase);
   if (!thrust) {
     console.error("Thrust animations not found!");
   } else if (!land) {
