@@ -81,7 +81,7 @@ async function init3d() {
   });
   scene.add(model);
   model.scale.set(150, 150, 150);
-  model.position.y = 3000;
+  model.position.y = 100;
   // Optional grid for scale reference
   // scene.add(new THREE.GridHelper(100, 100));
   // Load jet
