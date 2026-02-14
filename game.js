@@ -140,11 +140,14 @@ function createCombinedClip(allClips, names, newName) {
   return new THREE.AnimationClip(newName, duration, tracks);
 }
 
+const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   model.scale.set(150, 150, 150);
   model.position.y = 3000
   camera.position.set(0, height, 0);
+  const delta = clock.getDelta();
+  mixer.update(delta);
   renderer.render(scene, camera);
 }
 
