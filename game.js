@@ -2,7 +2,7 @@ import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
 import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/environments/RoomEnvironment.js?module';
 import { GLTFLoader } from './GLTFLoader.js';
 
-let scene, camera, renderer, model;
+let scene, camera, renderer, model, plane, mixer, thrust, land, fire;
 let height = 700
 init3d();
 
@@ -84,7 +84,24 @@ async function init3d() {
   scene.add(model);
   // Optional grid for scale reference
   // scene.add(new THREE.GridHelper(100, 100));
-
+  // Load jet
+  const obj = await loader.loadAsync('jet.glb');
+  plane = obj.scene;
+  mixer = new THREE.AnimationMixer(plane);
+  const animations = obj.animations;
+  thrust = createCombinedClip(animations, [
+    "thrust0", "thrust1", "thrust2", "thrust3", "thrust4", "thrust5", "thrust6", "thrust7", "thrust8", "thrust9"
+    ], "thrust");
+  land = createCombinedClip(animations, [
+    "landing11", "landing12", "landing13", "landing14", "landing15", "landing16", "landing17", "landing18", "landing21", "landing22", "landing23", "landing31", "landing32", "landing33"
+    ], "land");
+  fire = createCombinedClip(animations, [
+    "fire0", "fire1", "fire2", "fire3"
+    ], "fire");
+  scene.add(plane);
+  plane.position.y = 680;
+  thrust.play();
+  
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -98,6 +115,19 @@ async function init3d() {
   });
   document.getElementById('loading')?.remove();
   animate();
+}
+
+function createCombinedClip(allClips, names, newName) {
+  const selected = names
+    .map(name => THREE.AnimationClip.findByName(allClips, name))
+    .filter(Boolean);
+  if (!selected.length) {
+    console.warn("No clips found for", newName);
+    return null;
+  }
+  const tracks = selected.flatMap(clip => clip.tracks);
+  const duration = Math.max(...selected.map(c => c.duration));
+  return new THREE.AnimationClip(newName, duration, tracks);
 }
 
 function animate() {
