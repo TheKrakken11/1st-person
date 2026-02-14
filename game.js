@@ -81,7 +81,7 @@ async function init3d() {
   });
   scene.add(model);
   model.scale.set(150, 150, 150);
-  model.position.y = 100;
+  model.position.y = 3000;
   // Optional grid for scale reference
   // scene.add(new THREE.GridHelper(100, 100));
   // Load jet
@@ -109,7 +109,7 @@ async function init3d() {
     console.error("Fire animations not found!");
   }
   scene.add(plane);
-  plane.position.y = 680;
+  plane.position.y = 100;
   plane.scale.set(0.3048, 0.3048, 0.3048);
   thrust.play();
   const camOff = new THREE.Vector3(0, 5, 15);
