@@ -185,8 +185,8 @@ function extractVerticesFromGround() {
 
 
 function getElevationAt(x, z) {
-  const x = x / 150
-  const z = z / 150
+  let x = x / 150
+  let z = z / 150
   let lowerLeft = null;
   let lowerRight = null;
   let upperLeft = null;
