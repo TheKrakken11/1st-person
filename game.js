@@ -133,7 +133,7 @@ async function init3d() {
 
     // Set the tree position at the correct elevation
     const miny = new THREE.Box3().setFromObject(tree).min.y;
-    tree.position.set(x, elevation, z);
+    tree.position.set(x, elevation + model.position.y, z);
   }
   
   window.addEventListener('resize', onWindowResize);
