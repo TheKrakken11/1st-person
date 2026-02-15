@@ -3,7 +3,6 @@ import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/en
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation;
-let vertices = [];
 let raycaster = new THREE.Raycaster();
 init3d();
 
@@ -55,6 +54,7 @@ async function init3d() {
   const gltf = await loader.loadAsync('environment.glb');
 
   model = gltf.scene;
+
   model.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
@@ -118,26 +118,6 @@ async function init3d() {
   const camOff = new THREE.Vector3(0, 5, 15);
   plane.add(camera);
   camera.position.copy(camOff);
-  extractVerticesFromGround();
-  for (let i = 0; i < 500; i++) {
-    const base = await loader.loadAsync('Tree.glb');  // Load your tree model
-    const tree = base.scene;
-    scene.add(tree);
-
-    // Generate random (x, z) positions within the terrain bounds
-    const x = Math.floor(Math.random() * (500 + 500 + 1)) - 500;
-    const z = Math.floor(Math.random() * (500 + 500 + 1)) - 500;
-
-    // Use getElevationAt to find the height at (x, z)
-    const elevation = getElevationAt(x, z);
-
-    // Set the tree position at the correct elevation
-    const miny = new THREE.Box3().setFromObject(tree).min.y;
-    tree.position.set(x, elevation - miny, z);
-    if (i == 100) {
-      console.log("Tree #100 position:  ", tree.position.y);
-    }
-  }
   
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('keydown', (event) => {
@@ -164,87 +144,6 @@ function createCombinedClip(allClips, names, newName) {
   const duration = Math.max(...selected.map(c => c.duration));
   return new THREE.AnimationClip(newName, duration, tracks);
 }
-
-// Extract the vertices from the ground model
-function extractVerticesFromGround() {
-  const ground = model; // Your ground model (make sure it's loaded)
-  
-  // Traverse the model and extract vertices from each mesh
-  ground.traverse((child) => {
-    if (child.isMesh) {
-      const geometry = child.geometry;
-      const positionAttribute = geometry.getAttribute('position');
-      
-      for (let i = 0; i < positionAttribute.count; i++) {
-        const vertex = new THREE.Vector3().fromBufferAttribute(positionAttribute, i);
-        vertices.push(vertex); // Store each vertex in the vertices array
-      }
-    }
-  });
-}
-
-
-function getElevationAt(xbase, zbase) {
-  const x = xbase;
-  const z = zbase;
-  let lowerLeft = null;
-  let lowerRight = null;
-  let upperLeft = null;
-  let upperRight = null;
-
-  console.log("Checking for elevation at:", x, z);
-
-  // Find the 4 closest vertices surrounding the (x, z) point
-  for (let vertex of vertices) {
-    if (vertex.x <= x && vertex.z <= z) upperLeft = vertex;
-    if (vertex.x >= x && vertex.z <= z) upperRight = vertex;
-    if (vertex.x <= x && vertex.z >= z) lowerLeft = vertex;
-    if (vertex.x >= x && vertex.z >= z) lowerRight = vertex;
-  }
-
-  console.log("Upper Left:", upperLeft);
-  console.log("Upper Right:", upperRight);
-  console.log("Lower Left:", lowerLeft);
-  console.log("Lower Right:", lowerRight);
-
-  // If we have the four surrounding vertices, use bilinear interpolation
-  if (upperLeft && upperRight && lowerLeft && lowerRight) {
-    const x1 = upperLeft.x, x2 = upperRight.x, x3 = lowerLeft.x, x4 = lowerRight.x;
-    const z1 = upperLeft.z, z2 = lowerLeft.z;
-    const y1 = upperLeft.y, y2 = upperRight.y, y3 = lowerLeft.y, y4 = lowerRight.y;
-
-    // Interpolate in the x-direction (top and bottom rows)
-    const f1 = y1 + ((x - x1) / (x2 - x1)) * (y2 - y1);  // Top row interpolation
-    const f2 = y3 + ((x - x3) / (x4 - x3)) * (y4 - y3);  // Bottom row interpolation
-
-    // Interpolate in the z-direction between the two rows
-    const elevation = f1 + ((z - z1) / (z2 - z1)) * (f2 - f1);
-
-    return elevation;
-  }
-
-  // If no valid surrounding vertices, fallback to nearest vertex method
-  return getNearestElevation(x, z);  // A fallback method to use the nearest vertex
-}
-
-
-function getNearestElevation(x, z) {
-  let closestVertex = null;
-  let minDistance = Infinity;
-
-  // Find the closest vertex to (x, z)
-  for (let vertex of vertices) {
-    const distance = Math.sqrt(Math.pow(x - vertex.x, 2) + Math.pow(z - vertex.z, 2));  // 2D distance
-    if (distance < minDistance) {
-      minDistance = distance;
-      closestVertex = vertex;
-    }
-  }
-
-  // Return the y (elevation) of the closest vertex
-  return closestVertex ? closestVertex.y : 0;
-}
-
 
 const clock = new THREE.Clock();
 function animate() {
