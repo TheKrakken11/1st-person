@@ -60,12 +60,6 @@ async function init3d() {
       child.castShadow = true;
       child.receiveShadow = true;
       child.geometry.computeVertexNormals();
-      const positionAttribute = child.geometry.getAttribute('position');
-      
-      for (let i = 0; i < positionAttribute.count; i++) {
-        const vertex = new THREE.Vector3().fromBufferAttribute(positionAttribute, i);
-        vertices.push(vertex); // Store each vertex in the vertices array
-      }
       const m = child.material;
       m.flatShading = false;
       if (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) {
@@ -124,7 +118,7 @@ async function init3d() {
   const camOff = new THREE.Vector3(0, 5, 15);
   plane.add(camera);
   camera.position.copy(camOff);
-
+  extractVerticesFromGround();
   for (let i = 0; i < 500; i++) {
     const base = await loader.loadAsync('Tree.glb');  // Load your tree model
     const tree = base.scene;
@@ -167,6 +161,25 @@ function createCombinedClip(allClips, names, newName) {
   const duration = Math.max(...selected.map(c => c.duration));
   return new THREE.AnimationClip(newName, duration, tracks);
 }
+
+// Extract the vertices from the ground model
+function extractVerticesFromGround() {
+  const ground = model; // Your ground model (make sure it's loaded)
+  
+  // Traverse the model and extract vertices from each mesh
+  ground.traverse((child) => {
+    if (child.isMesh) {
+      const geometry = child.geometry;
+      const positionAttribute = geometry.getAttribute('position');
+      
+      for (let i = 0; i < positionAttribute.count; i++) {
+        const vertex = new THREE.Vector3().fromBufferAttribute(positionAttribute, i);
+        vertices.push(vertex); // Store each vertex in the vertices array
+      }
+    }
+  });
+}
+
 
 function getElevationAt(x, z) {
   let lowerLeft = null;
