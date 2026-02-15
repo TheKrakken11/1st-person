@@ -2,7 +2,8 @@ import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
 import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/environments/RoomEnvironment.js?module';
 import { GLTFLoader } from './GLTFLoader.js';
 
-let scene, camera, renderer, model, plane, mixer, thrust, land, fire;
+let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation;
+let raycaster = new THREE.Raycaster();
 init3d();
 
 async function init3d() {
@@ -112,7 +113,6 @@ async function init3d() {
     console.error("Fire animations not found!");
   }
   scene.add(plane);
-  plane.position.y = 100;
   plane.scale.set(0.3048, 0.3048, 0.3048);
   thrust.play();
   const camOff = new THREE.Vector3(0, 5, 15);
@@ -148,6 +148,12 @@ function createCombinedClip(allClips, names, newName) {
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
+  raycaster.set(new THREE.Vector3(plane.position.x, -10, plane.position.z), new THREE.Vector3(0, 1, 0).normalize());
+  const intersects = raycaster.intersectObjects(scene.children, true);
+  if (intersects.length > 0) {
+    elevation = intersects[0].point.y;
+  }
+  plane.position.y = elevation + 30;
   camera.lookAt(plane.position.x, plane.position.y, plane.position.z);
   const delta = clock.getDelta();
   mixer.update(delta);
