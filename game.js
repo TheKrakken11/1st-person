@@ -3,6 +3,7 @@ import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/en
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation;
+let vertices = [];
 let raycaster = new THREE.Raycaster();
 init3d();
 
@@ -54,7 +55,6 @@ async function init3d() {
   const gltf = await loader.loadAsync('environment.glb');
 
   model = gltf.scene;
-  let vertices = [];
   model.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
