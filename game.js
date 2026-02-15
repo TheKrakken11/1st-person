@@ -60,7 +60,7 @@ async function init3d() {
       child.castShadow = true;
       child.receiveShadow = true;
       child.geometry.computeVertexNormals();
-      const positionAttribute = geometry.getAttribute('position');
+      const positionAttribute = child.geometry.getAttribute('position');
       
       for (let i = 0; i < positionAttribute.count; i++) {
         const vertex = new THREE.Vector3().fromBufferAttribute(positionAttribute, i);
