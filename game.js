@@ -129,7 +129,7 @@ async function init3d() {
     const z = Math.floor(Math.random() * (500 + 500 + 1)) - 500;
 
     // Use getElevationAt to find the height at (x, z)
-    const elevation = getElevationAt(x, z) * 1;
+    const elevation = getElevationAt(x, z) * -150;
 
     // Set the tree position at the correct elevation
     const miny = new THREE.Box3().setFromObject(tree).min.y;
