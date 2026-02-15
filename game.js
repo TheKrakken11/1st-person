@@ -129,11 +129,11 @@ async function init3d() {
     const z = Math.floor(Math.random() * (500 + 500 + 1)) - 500;
 
     // Use getElevationAt to find the height at (x, z)
-    const elevation = (getElevationAt(x, z) * 150);
+    const elevation = getElevationAt(x, z);
 
     // Set the tree position at the correct elevation
     const miny = new THREE.Box3().setFromObject(tree).min.y;
-    tree.position.set(x, elevation + 400 - miny, z);
+    tree.position.set(x, elevation - miny, z);
     if (i == 100) {
       console.log("Tree #100 position:  ", tree.position.y);
     }
@@ -185,12 +185,14 @@ function extractVerticesFromGround() {
 
 
 function getElevationAt(xbase, zbase) {
-  const x = xbase / 150
-  const z = zbase / 150
+  const x = xbase;
+  const z = zbase;
   let lowerLeft = null;
   let lowerRight = null;
   let upperLeft = null;
   let upperRight = null;
+
+  console.log("Checking for elevation at:", x, z);
 
   // Find the 4 closest vertices surrounding the (x, z) point
   for (let vertex of vertices) {
@@ -199,6 +201,11 @@ function getElevationAt(xbase, zbase) {
     if (vertex.x <= x && vertex.z >= z) lowerLeft = vertex;
     if (vertex.x >= x && vertex.z >= z) lowerRight = vertex;
   }
+
+  console.log("Upper Left:", upperLeft);
+  console.log("Upper Right:", upperRight);
+  console.log("Lower Left:", lowerLeft);
+  console.log("Lower Right:", lowerRight);
 
   // If we have the four surrounding vertices, use bilinear interpolation
   if (upperLeft && upperRight && lowerLeft && lowerRight) {
@@ -219,6 +226,7 @@ function getElevationAt(xbase, zbase) {
   // If no valid surrounding vertices, fallback to nearest vertex method
   return getNearestElevation(x, z);  // A fallback method to use the nearest vertex
 }
+
 
 function getNearestElevation(x, z) {
   let closestVertex = null;
