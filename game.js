@@ -118,6 +118,20 @@ async function init3d() {
   const camOff = new THREE.Vector3(0, 5, 15);
   plane.add(camera);
   camera.position.copy(camOff);
+
+  for (let i = 0; i < 500; i++) {
+    const tree = await loader.loadAsync('Tree.glb');
+    scene.add(tree);
+    tree.position.set(Math.floor(Math.random() * (500 + 500 + 1)) - 500, 100000, Math.floor(Math.random() * (500 + 500 + 1)) - 500);
+    raycaster.set(new THREE.Vector3(tree.position.x, -10, tree.position.z), new THREE.Vector3(0, 1, 0).normalize());
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    if (intersects.length > 0) {
+      elevation = intersects[0].point.y;
+    }
+    const box = new THREE.Box3().setFromObject(tree);
+    const miny = box.min.y;
+    tree.position.y = elevation - (miny - 100000);
+  }
   
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('keydown', (event) => {
