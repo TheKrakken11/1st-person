@@ -120,12 +120,12 @@ async function init3d() {
   plane.add(camera);
   camera.position.copy(camOff);
 
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 1000; i++) {
     const treebase = await loader.loadAsync('Tree.glb');
     const tree = treebase.scene;
     scene.add(tree);
-    const x = Math.random() * 200 - 100;
-    const z = Math.random() * 200 - 100;
+    const x = Math.random() * 4000 - 2000;
+    const z = Math.random() * 4000 - 2000;
     tree.position.set(x, -10, z);
     trees.push(tree);
   }
