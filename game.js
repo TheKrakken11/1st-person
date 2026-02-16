@@ -3,6 +3,7 @@ import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/en
 import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation;
+let points = [];
 let raycaster = new THREE.Raycaster();
 init3d();
 
@@ -86,6 +87,25 @@ async function init3d() {
   const box = new THREE.Box3().setFromObject(model);
   const miny = box.min.y;
   model.position.y = -miny
+  const length = box.max.z - box.min.z;
+  const width = box.max.x - box.min.x;
+  for (let l = 0; l <= length; l++) {
+    for (let w = 0; w <= width; w++) {
+      raycaster.set(new THREE.Vector3(box.min.x + w, 100000, box.min.z + l), new THREE.Vector3(0, -1, 0));
+      const intersects = raycaster.intersectObject(model, true);
+      if (intersects.length > 0) {
+        const point = intersects[0].point;
+        const vertex = {
+          x: point.x,
+          y: point.y,
+          z: point.z
+        }
+        points.push(vertex);
+      } else {
+        console.warn("Unable to find elevation of that location!")
+      }
+    }
+  }
   // Optional grid for scale reference
   // scene.add(new THREE.GridHelper(100, 100));
   // Load jet
@@ -145,11 +165,35 @@ function createCombinedClip(allClips, names, newName) {
   return new THREE.AnimationClip(newName, duration, tracks);
 }
 
+function GetElevation(x, z) {
+  if (points.find(p => p.x === x && p.z === z)) {
+    return points.find(p => p.x === x && p.z === z).y
+  } else {
+    const topright = points.find(p => p.x === Math.ceil(x) && p.z === Math.ceil(z)).y
+    const topleft = points.find(p => p.x === Math.floor(x) && p.z === Math.ceil(z)).y
+    const bottomright = points.find(p => p.x === Math.ceil(x) && p.z === Math.floor(z)).y
+    const bottomleft = points.find(p => p.x === Math.floor(x) && p.z === Math.floor(z)).y
+    if (!topright || !topleft || !bottomright || !bottomleft) {
+      console.error("Could not find required neighboring points for elevation calculation.");
+      return 0;  // Or return a default value if needed
+    }
+    const tx = (x - bottomleft.x) / (bottomright.x - bottomleft.x);
+    const tz = (z - bottomleft.z) / (topleft.z - bottomleft.z);
+
+    const y =
+      (1 - tx) * (1 - tz) * bottomleft.y +
+      tx * (1 - tz) * bottomright.y +
+      (1 - tx) * tz * topleft.y +
+      tx * tz * topright.y;
+    return y;
+  }
+}
+
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   raycaster.set(new THREE.Vector3(plane.position.x, -10, plane.position.z), new THREE.Vector3(0, 1, 0).normalize());
-  const intersects = raycaster.intersectObjects(scene.children, true);
+  const intersects = raycaster.intersectObject(model, true);
   if (intersects.length > 0) {
     elevation = intersects[0].point.y;
   }
