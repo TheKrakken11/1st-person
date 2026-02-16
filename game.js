@@ -4,6 +4,7 @@ import { GLTFLoader } from './GLTFLoader.js';
 
 let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation;
 let raycaster = new THREE.Raycaster();
+let trees = [];
 init3d();
 
 async function init3d() {
@@ -118,6 +119,24 @@ async function init3d() {
   const camOff = new THREE.Vector3(0, 5, 15);
   plane.add(camera);
   camera.position.copy(camOff);
+
+  for (let i = 0; i < 20; i++) {
+    const treebase = await loader.loadAsync('Tree.glb');
+    const tree = treebase.scene;
+    scene.add(tree);
+    const x = Math.random() * 100 - 50;
+    const z = Math.random() * 100 - 50;
+    raycaster.set(new THREE.Vector3(x, -1, z), new THREE.Vector3(0, 1, 0));
+    const intersects = raycaster.intersectObject(model, true);
+    if (intersects.length > 0) {
+      const y = intersects[0].point.y;
+      tree.position.set(x, y, z);
+    } else {
+      console.warn("No height found for that location!")
+      tree.position.set(x, 0, z);
+    }
+    trees.push(tree);
+  }
   
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('keydown', (event) => {
@@ -149,7 +168,7 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   raycaster.set(new THREE.Vector3(plane.position.x, -10, plane.position.z), new THREE.Vector3(0, 1, 0).normalize());
-  const intersects = raycaster.intersectObjects(scene.children, true);
+  const intersects = raycaster.intersectObject(model, true);
   if (intersects.length > 0) {
     elevation = intersects[0].point.y;
   }
