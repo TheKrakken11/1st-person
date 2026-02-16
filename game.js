@@ -169,10 +169,14 @@ function animate() {
   requestAnimationFrame(animate);
   trees.forEach((tree) => {
     if (tree.position.y === -10) {
+      const box = new THREE.Box3().setFromObject(tree);
+      const height = box.max.y - box.min.y;
+      tree.scale.set(6/height, 6/height, 6/height);
+      const miny = box.min.y;
       raycaster.set(new THREE.Vector3(tree.position.x, -10, tree.position.z), new THREE.Vector3(0, 1, 0).normalize());
       const intersects = raycaster.intersectObject(model, true);
       if (intersects.length > 0) {
-        tree.position.y = intersects[0].point.y;
+        tree.position.y = intersects[0].point.y - miny;
       }
     }
   });
