@@ -108,7 +108,7 @@ async function init3d() {
         console.warn("Unable to find elevation of that location!")
       }
       percent += fraction;
-      loading.textContent = "Raycasting percentage: ${percent}"
+      loading.textContent = `Raycasting percentage: ${percent}`
     }
   }
   // Optional grid for scale reference
