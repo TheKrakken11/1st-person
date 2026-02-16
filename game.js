@@ -133,7 +133,7 @@ async function init3d() {
       tree.position.set(x, y, z);
     } else {
       console.warn("No height found for that location!")
-      tree.position.set(x, 0, z);
+      tree.position.set(x, -10, z);
     }
     trees.push(tree);
   }
@@ -167,6 +167,15 @@ function createCombinedClip(allClips, names, newName) {
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
+  trees.forEach((tree) => {
+    if (tree.position.y === -10) {
+      raycaster.set(new THREE.Vector3(tree.position.x, -10, tree.position.z), new THREE.Vector3(0, 1, 0).normalize());
+      const intersects = raycaster.intersectObject(model, true);
+      if (intersects.length > 0) {
+        tree.position.y = intersects[0].point.y;
+      }
+    }
+  }
   raycaster.set(new THREE.Vector3(plane.position.x, -10, plane.position.z), new THREE.Vector3(0, 1, 0).normalize());
   const intersects = raycaster.intersectObject(model, true);
   if (intersects.length > 0) {
