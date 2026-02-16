@@ -175,7 +175,7 @@ function animate() {
         tree.position.y = intersects[0].point.y;
       }
     }
-  }
+  });
   raycaster.set(new THREE.Vector3(plane.position.x, -10, plane.position.z), new THREE.Vector3(0, 1, 0).normalize());
   const intersects = raycaster.intersectObject(model, true);
   if (intersects.length > 0) {
