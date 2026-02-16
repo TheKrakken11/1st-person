@@ -95,6 +95,8 @@ async function init3d() {
   for (let l = 0; l <= length; l++) {
     for (let w = 0; w <= width; w++) {
       raycaster.set(new THREE.Vector3(box.min.x + w, box.max.y + 10, box.min.z + l), new THREE.Vector3(0, -1, 0));
+      console.log("Ray starting at:", box.min.x + w, box.max.y + 10, box.min.z + l);
+      console.log("Ray direction:", new THREE.Vector3(0, -1, 0));
       const intersects = raycaster.intersectObject(model, true);
       if (intersects.length > 0) {
         const point = intersects[0].point;
