@@ -91,7 +91,7 @@ async function init3d() {
   const width = box.max.x - box.min.x;
   const fraction = 100 / (length * width);
   const loadingdiv = document.getElementById("loading");
-  const percent = 0
+  let percent = 0
   for (let l = 0; l <= length; l++) {
     for (let w = 0; w <= width; w++) {
       raycaster.set(new THREE.Vector3(box.min.x + w, box.max.y + 10, box.min.z + l), new THREE.Vector3(0, -1, 0));
