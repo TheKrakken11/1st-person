@@ -126,7 +126,7 @@ async function init3d() {
     scene.add(tree);
     const x = Math.random() * 100 - 50;
     const z = Math.random() * 100 - 50;
-    raycaster.set(new THREE.Vector3(x, -1, z), new THREE.Vector3(0, 1, 0));
+    raycaster.set(new THREE.Vector3(x, -10, z), new THREE.Vector3(0, 1, 0).normalize());
     const intersects = raycaster.intersectObject(model, true);
     if (intersects.length > 0) {
       const y = intersects[0].point.y;
