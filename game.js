@@ -159,7 +159,7 @@ function createCombinedClip(allClips, names, newName) {
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
-  if (trees.some(tree => tree.position.y = -10) {
+  if (trees.some(tree => tree.position.y = -10)) {
     trees.forEach((tree) => {
       if (tree.position.y === -10) {
         const box = new THREE.Box3().setFromObject(tree);
