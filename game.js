@@ -165,7 +165,8 @@ function animate() {
         const box = new THREE.Box3().setFromObject(tree);
         const height = box.max.y - box.min.y;
         tree.scale.set(6/height, 6/height, 6/height);
-        const miny = box.min.y;
+        const box2 = new THREE.Box3().setFromObject(tree);
+        const miny = box2.min.y;
         raycaster.set(new THREE.Vector3(tree.position.x, -10, tree.position.z), new THREE.Vector3(0, 1, 0).normalize());
         const intersects = raycaster.intersectObject(model, true);
         if (intersects.length > 0) {
