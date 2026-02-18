@@ -1,8 +1,9 @@
 import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
 import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/environments/RoomEnvironment.js?module';
 import { GLTFLoader } from './GLTFLoader.js';
+import { Aircraft } from './AirplanePhysics.js';
 
-let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation;
+let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation, planePhysics;
 let raycaster = new THREE.Raycaster();
 let trees = [];
 init3d();
