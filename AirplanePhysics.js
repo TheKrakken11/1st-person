@@ -69,7 +69,7 @@ class Aircraft {
     const localVel = velDir.clone().applyQuaternion(this.plane.quaternion.clone().invert());
     const alphaRad = Math.atan2(localVel.y, -localVel.z);
     
-    const Cl = this.findCl(alphaRad * 180 / Math.PI);
+    const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
     const lift = this.findLift(this.velocity.length(), Cl);
     const thrust = this.thrust;
     const Cd = this.findCd(Cl);
