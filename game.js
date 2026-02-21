@@ -3,7 +3,7 @@ import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/en
 import { GLTFLoader } from './GLTFLoader.js';
 import { Aircraft } from './AirplanePhysics.js';
 
-let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation, planePhysics;
+let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation, planePhysics, last;
 let raycaster = new THREE.Raycaster();
 let trees = [];
 init3d();
@@ -120,14 +120,24 @@ async function init3d() {
   const camOff = new THREE.Vector3(0, 5, 15);
   plane.add(camera);
   camera.position.copy(camOff);
+  planePhysics = new Aircraft({
+    object: plane,
+    weight: 15800,
+    wingArea: 158,
+    wingspan: 25
+  });
+  planePhysics.updateThrust(4400 * 4.44822);
 
+  // Step 1: Load Tree GLB once
+  const treeBase = await loader.loadAsync('Tree.glb');
+
+  // Step 2: Clone 1000 trees
   for (let i = 0; i < 1000; i++) {
-    const treebase = await loader.loadAsync('Tree.glb');
-    const tree = treebase.scene;
-    scene.add(tree);
+    const tree = treeBase.scene.clone(true); // deep clone
     const x = Math.random() * 4000 - 2000;
     const z = Math.random() * 4000 - 2000;
     tree.position.set(x, -10, z);
+    scene.add(tree);
     trees.push(tree);
   }
   
@@ -141,6 +151,7 @@ async function init3d() {
     }
   });
   document.getElementById('loading')?.remove();
+  last = performance.now();
   animate();
 }
 
@@ -160,7 +171,8 @@ function createCombinedClip(allClips, names, newName) {
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
-  if (trees.some(tree => tree.position.y = -10)) {
+  const dt = (performance.now() - last) / 1000;
+  if (trees.some(tree => tree.position.y === -10)) {
     trees.forEach((tree) => {
       if (tree.position.y === -10) {
         const box = new THREE.Box3().setFromObject(tree);
@@ -181,10 +193,11 @@ function animate() {
   if (intersects.length > 0) {
     elevation = intersects[0].point.y;
   }
-  plane.position.y = elevation + 30;
+  planePhysics.update(dt);
   camera.lookAt(plane.position.x, plane.position.y, plane.position.z);
   const delta = clock.getDelta();
   mixer.update(delta);
+  last = performance.now()
   renderer.render(scene, camera);
 }
 
