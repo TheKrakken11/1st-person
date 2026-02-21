@@ -122,11 +122,11 @@ async function init3d() {
   camera.position.copy(camOff);
   planePhysics = new Aircraft({
     object: plane,
-    weight: 15800,
+    weight: 15500,
     wingArea: 158,
     wingspan: 25
   });
-  planePhysics.updateThrust(8800 * 4.44822);
+  planePhysics.updateThrust(11500 * 4.44822);
 
   // Step 1: Load Tree GLB once
   const treeBase = await loader.loadAsync('Tree.glb');
