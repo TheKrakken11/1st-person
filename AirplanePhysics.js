@@ -8,15 +8,16 @@ class Aircraft {
     wingspan   //ft
   }) {
     this.mass = 0.453592 * weight;
-    this.wingArea = wingArea;
+    this.wingArea = wingArea * 0.092903;
     this.gravity = 9.81;
     this.plane = object; //three.js object with position, rotation, etc.
-    this.wingspan = wingspan;
+    this.wingspan = wingspan * 0.3048;
     this.thrust = 0;
     this.velocity = new THREE.Vector3(0, 0, -200); //m/s
+    this.airDensity = 1.225;
   }
   findLift(velocity, Cl) {
-    return 0.0569 * Math.pow(velocity, 2) * this.wingArea * Cl;
+    return 0.5 * this.airDensity * velocity * velocity * this.wingArea * Cl;
   }
   findWeight() {
     return this.mass * this.gravity;
@@ -51,37 +52,70 @@ class Aircraft {
 
     return Cl;
   }
+  findRho() {
+    const h = Math.max(0, this.plane.position.y);
+    const factor = 1 - 2.25577e-5 * h;
+    return 1.225 * Math.pow(Math.max(factor, 0), 4.25588);
+  }
   findCd(Cl, Cd0 = 0.025, e = 0.85) {
     const aspectRatio = Math.pow(this.wingspan, 2) / this.wingArea;
     const inducedDrag = (Cl * Cl) / (Math.PI * aspectRatio * e);
     return Cd0 + inducedDrag;
   }
   findDrag(velocity, Cd) {
-    return 0.0569 * velocity * velocity * this.wingArea * Cd;
+    return 0.5 * this.airDensity * velocity * velocity * this.wingArea * Cd;
   }
   updateThrust(thrust) {
     this.thrust = thrust;
   }
   update(dt) {
-    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.plane.quaternion);
-    const velDir = this.velocity.clone().normalize();
+    this.airDensity = this.findRho();
+    const speed = this.velocity.length();
+    const velDir = speed > 1e-6 ? this.velocity.clone().normalize() : new THREE.Vector3(0,0,0);
     // Signed AoA in radians
     const localVel = velDir.clone().applyQuaternion(this.plane.quaternion.clone().invert());
     const alphaRad = Math.atan2(localVel.y, -localVel.z);
     
     const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
-    const lift = this.findLift(this.velocity.length(), Cl);
     const thrust = this.thrust;
+
+  
+    // --- DRAG (opposes velocity) ---
     const Cd = this.findCd(Cl);
-    const drag = this.findDrag(this.velocity.length(), Cd);
-    const dirForces = new THREE.Vector3(0, lift, drag-thrust); // -Z is forward
-    const rotation = new THREE.Quaternion().setFromEuler(this.plane.rotation);
-    dirForces.applyQuaternion(rotation);
-    const weight = this.findWeight();
-    const yForces = new THREE.Vector3(0, -weight, 0);
-    const finalForces = new THREE.Vector3().add(yForces).add(dirForces)
-    finalForces.multiplyScalar(1 / this.mass);
-    this.velocity.add(finalForces.multiplyScalar(dt));
+    const dragMag = this.findDrag(speed, Cd);
+    const dragForce = velDir.clone().multiplyScalar(-dragMag);
+
+    // --- LIFT (perpendicular to airflow) ---
+    const bodyUp = new THREE.Vector3(0, 1, 0)
+      .applyQuaternion(this.plane.quaternion);
+
+    const liftDir = bodyUp.clone()
+      .projectOnPlane(velDir)
+      .normalize();
+    if (liftDir.lengthSq() < 1e-6) liftDir.set(0,0,0);
+    
+    const liftMag = this.findLift(speed, Cl);
+    const liftForce = liftDir.multiplyScalar(liftMag);
+
+    // --- THRUST (forward along aircraft nose) ---
+    const thrustForce = new THREE.Vector3(0, 0, -1)
+      .applyQuaternion(this.plane.quaternion)
+      .multiplyScalar(this.thrust);
+
+    // --- WEIGHT ---
+    const weightForce = new THREE.Vector3(0, -this.findWeight(), 0);
+
+    // --- TOTAL FORCE ---
+    const totalForce = new THREE.Vector3()
+      .add(dragForce)
+      .add(liftForce)
+      .add(thrustForce)
+      .add(weightForce);
+
+    // --- ACCELERATION ---
+    const acceleration = totalForce.multiplyScalar(1 / this.mass);
+
+    this.velocity.add(acceleration.multiplyScalar(dt));
     this.plane.position.add(this.velocity.clone().multiplyScalar(dt));
   }
 }
