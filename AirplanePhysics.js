@@ -108,6 +108,7 @@ export class Aircraft {
       .normalize();
     const liftDir = new THREE.Vector3()
       .crossVectors(Vhat, liftNormal)
+      .cross(Vhat)
       .normalize();
     console.log("Lift:   ", liftDir);
     if (liftDir.lengthSq() < 1e-6) liftDir.set(0,0,0);
