@@ -20,7 +20,7 @@ async function init3d() {
     0.1,
     1000
   );
-  camera.far = 10000;
+  camera.far = 100000;
   camera.updateProjectionMatrix();
   camera.position.set(0, 700, 0);
 
@@ -85,7 +85,7 @@ async function init3d() {
     }
   });
   scene.add(model);
-  model.scale.set(150, 150, 150);
+  model.scale.set(300, 300, 300);
   model.position.y = 0;
   const box = new THREE.Box3().setFromObject(model);
   const miny = box.min.y;
