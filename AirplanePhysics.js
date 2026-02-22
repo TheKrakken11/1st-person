@@ -13,7 +13,7 @@ export class Aircraft {
     this.plane = object; //three.js object with position, rotation, etc.
     this.wingspan = wingspan * 0.3048;
     this.thrust = 0;
-    this.velocity = new THREE.Vector3(0, 0, -200); //m/s
+    this.velocity = new THREE.Vector3(0, 1, -200); //m/s
     this.airDensity = 1.225;
   }
   findLift(velocity, Cl) {
