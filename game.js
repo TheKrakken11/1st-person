@@ -51,6 +51,8 @@ async function init3d() {
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
   scene.add(hemiLight);
 
+  // Fog
+  scene.fog = new THREE.FogExp2(0x87ceeb, 0.00008);
   // Load GLB
   const loader = new GLTFLoader();
   const gltf = await loader.loadAsync('environment.glb');
@@ -116,6 +118,7 @@ async function init3d() {
   }
   scene.add(plane);
   plane.scale.set(0.3048, 0.3048, 0.3048);
+  plane.position.set(500);
   thrust.play();
   const camOff = new THREE.Vector3(0, 5, 15);
   plane.add(camera);
