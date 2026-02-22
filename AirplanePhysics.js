@@ -85,7 +85,7 @@ export class Aircraft {
     
     // Prevent divide-by-zero issues at very low speed
     const alphaRad = Math.atan2(w, Math.max(u, 0.001));
-    
+    console.log("AoA:   ", (alphaRad * 180 / Math.PI) + 3);
     const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
     const thrust = this.thrust;
 
