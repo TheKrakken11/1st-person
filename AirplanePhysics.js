@@ -72,9 +72,19 @@ export class Aircraft {
     this.airDensity = this.findRho();
     const speed = this.velocity.length();
     const velDir = speed > 1e-6 ? this.velocity.clone().normalize() : new THREE.Vector3(0,0,0);
-    // Signed AoA in radians
-    const localVel = velDir.clone().applyQuaternion(this.plane.quaternion.clone().invert());
-    const alphaRad = Math.atan2(localVel.y, -localVel.z);
+    // --- BODY-AXIS VELOCITY ---
+    const bodyVel = this.velocity.clone()
+      .applyQuaternion(this.plane.quaternion.clone().invert());
+    
+    // In coordinate system:
+    // Forward = (0, 0, -1)
+    // Up      = (0, 1,  0)
+    
+    const u = -bodyVel.z;   // forward velocity component
+    const w = bodyVel.y;    // vertical body component
+    
+    // Prevent divide-by-zero issues at very low speed
+    const alphaRad = Math.atan2(w, Math.max(u, 0.001));
     
     const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
     const thrust = this.thrust;
