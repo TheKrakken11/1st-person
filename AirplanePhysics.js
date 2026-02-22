@@ -96,11 +96,15 @@ export class Aircraft {
     const dragForce = velDir.clone().multiplyScalar(-dragMag);
 
     // --- LIFT (perpendicular to airflow) ---
-    const bodyUp = new THREE.Vector3(0, 1, 0)
-      .applyQuaternion(this.plane.quaternion);
-
-    const liftDir = bodyUp.clone()
-      .projectOnPlane(velDir)
+    const relWind = this.velocity.clone().multiplyScalar(-1);
+    const relspeed = relWind.length();
+    const Vhat = relWind.clone().normalize();
+    const spanDir = new THREE.Vector3(1, 0, 0)
+      .applyQuaternion(this.plane.quaternion)
+      .normalize();
+    const liftDir = new THREE.Vector3()
+      .crossVectors(Vhat, spanDir)
+      .cross(Vhat)
       .normalize();
     if (liftDir.lengthSq() < 1e-6) liftDir.set(0,0,0);
     
