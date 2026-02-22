@@ -69,6 +69,7 @@ export class Aircraft {
     this.thrust = thrust;
   }
   update(dt) {
+    console.clear();
     this.airDensity = this.findRho();
     const speed = this.velocity.length();
     const velDir = speed > 1e-6 ? this.velocity.clone().normalize() : new THREE.Vector3(0,0,0);
@@ -85,7 +86,9 @@ export class Aircraft {
     
     // Prevent divide-by-zero issues at very low speed
     const alphaRad = Math.atan2(w, Math.max(u, 0.001));
-    console.log("AoA:   ", (alphaRad * 180 / Math.PI) + 3);
+    if (Math.random() > 0.75) {
+      console.log("AoA:   ", (alphaRad * 180 / Math.PI) + 3);
+    }
     const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
     const thrust = this.thrust;
 
@@ -109,7 +112,9 @@ export class Aircraft {
       .crossVectors(Vhat, liftNormal)
       .cross(Vhat)
       .normalize();
-    console.log("Lift:   ", liftDir);
+    if (Math.random() > 0.75) {
+      console.log("Lift:   ", liftDir);
+    }
     if (liftDir.lengthSq() < 1e-6) liftDir.set(0,0,0);
     
     const liftMag = this.findLift(speed, Cl);
@@ -134,6 +139,9 @@ export class Aircraft {
     const acceleration = totalForce.multiplyScalar(1 / this.mass);
 
     this.velocity.add(acceleration.multiplyScalar(dt));
+    if (Math.random() > 0.75) {
+      console.log("Velocity:   ", this.velocity);
+    }
     this.plane.position.add(this.velocity.clone().multiplyScalar(dt));
   }
 }
