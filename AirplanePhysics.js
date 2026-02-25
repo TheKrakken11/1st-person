@@ -104,7 +104,7 @@ export class Aircraft {
       .applyQuaternion(this.plane.quaternion)
       .normalize();
     const liftDir = new THREE.Vector3()
-      .crossVectors(spanDir, Vhat)
+      .crossVectors(Vhat, spanDir)
       .normalize();
     console.log("Lift:   ", liftDir);
     if (liftDir.lengthSq() < 1e-6) liftDir.set(0,0,0);
