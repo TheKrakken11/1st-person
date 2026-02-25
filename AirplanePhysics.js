@@ -103,17 +103,13 @@ export class Aircraft {
     const spanDir = new THREE.Vector3(1, 0, 0)
       .applyQuaternion(this.plane.quaternion)
       .normalize();
-    const liftDir = new THREE.Vector3()
-      .crossVectors(Vhat, spanDir)
+    const liftNormal = new THREE.Vector3()
+      .crossVectors(spanDir, Vhat)
       .normalize();
-    // Aircraft body up in world space
-    const bodyUp = new THREE.Vector3(0, 1, 0)
-      .applyQuaternion(this.plane.quaternion);
-
-    // If lift is pointing downward relative to aircraft, flip it
-    if (liftDir.dot(bodyUp) < 0) {
-      liftDir.multiplyScalar(-1);
-    }
+    const liftDir = new THREE.Vector3()
+      .crossVectors(liftNormal, Vhat)
+      .cross(Vhat)
+      .normalize();
     console.log("Lift:   ", liftDir);
     if (liftDir.lengthSq() < 1e-6) liftDir.set(0,0,0);
     
