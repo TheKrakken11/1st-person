@@ -107,15 +107,15 @@ export class Aircraft {
       .crossVectors(spanDir, Vhat)
       .normalize();
     const liftDir = new THREE.Vector3()
-      .crossVectors(liftNormal, Vhat)
+      .crossVectors(Vhat, liftNormal)
       .cross(Vhat)
       .normalize();
-    console.log("Lift:   ", liftDir);
+    console.log("Lift Direction:   ", liftDir);
     if (liftDir.lengthSq() < 1e-6) liftDir.set(0,0,0);
     
     const liftMag = this.findLift(speed, Cl);
+    console.log("Lift:   ", liftMag);
     const liftForce = liftDir.multiplyScalar(liftMag);
-
     // --- THRUST (forward along aircraft nose) ---
     const thrustForce = new THREE.Vector3(0, 0, -1)
       .applyQuaternion(this.plane.quaternion)
