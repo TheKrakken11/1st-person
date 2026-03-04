@@ -98,22 +98,20 @@ export class Aircraft {
     const dragMag = this.findDrag(speed, Cd);
     const dragForce = velDir.clone().multiplyScalar(-dragMag);
 
-    // --- LIFT (perpendicular to airflow) ---
+    // --- LIFT (perpendicular to airflow and wingspan) ---
+
     const relWind = this.velocity.clone().multiplyScalar(-1);
-    const relspeed = relWind.length();
     const Vhat = relWind.clone().normalize();
+
+    // Aircraft right-wing direction (span axis in world space)
     const spanDir = new THREE.Vector3(1, 0, 0)
       .applyQuaternion(this.plane.quaternion)
       .normalize();
-    const liftNormal = new THREE.Vector3()
+
+    // Lift = span × airflow  (single cross product)
+    const liftDir = new THREE.Vector3()
       .crossVectors(spanDir, Vhat)
       .normalize();
-    const liftDir = new THREE.Vector3()
-      .crossVectors(Vhat, liftNormal)
-      .cross(Vhat)
-      .normalize();
-    console.log("Lift Direction:   ", liftDir);
-    if (liftDir.lengthSq() < 1e-6) liftDir.set(0,0,0);
     
     const liftMag = this.findLift(speed, Cl);
     console.log("Lift:   ", liftMag);
