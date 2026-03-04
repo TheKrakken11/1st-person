@@ -82,7 +82,7 @@ export class Aircraft {
     // Up      = (0, 1,  0)
     
     const u = -bodyVel.z;   // forward velocity component
-    const w = bodyVel.y;    // vertical body component
+    const w = -bodyVel.y;    // vertical body component
     
     // Prevent divide-by-zero issues at very low speed
     const alphaRad = Math.atan2(w, u);
