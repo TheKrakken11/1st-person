@@ -108,9 +108,9 @@ export class Aircraft {
       .applyQuaternion(this.plane.quaternion)
       .normalize();
 
-    // Lift = span × airflow  (single cross product)
     const liftDir = new THREE.Vector3()
-      .crossVectors(spanDir, Vhat)
+      .crossVectors(Vhat, spanDir)
+      .cross(spanDir)
       .normalize();
     
     const liftMag = this.findLift(speed, Cl);
