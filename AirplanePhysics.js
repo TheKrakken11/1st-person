@@ -106,7 +106,10 @@ export class Aircraft {
     const right = new THREE.Vector3(1,0,0)
       .applyQuaternion(this.plane.quaternion);
 
-    // Remove lateral component of airflow
+    const up = new THREE.Vector3(0,1,0)
+      .applyQuaternion(this.plane.quaternion);
+
+    // Remove lateral component (symmetry constraint)
     const Vsym = Vhat.clone().sub(
       right.clone().multiplyScalar(Vhat.dot(right))
     );
@@ -115,14 +118,15 @@ export class Aircraft {
       Vsym.normalize();
     }
 
-    let liftDir = new THREE.Vector3()
-      .crossVectors(right, Vsym)
-      .normalize();
-    
+    // Lift is perpendicular to airflow inside symmetry plane
+    let liftDir = up.clone().sub(
+      Vsym.clone().multiplyScalar(up.dot(Vsym))
+    );
+
     if (liftDir.lengthSq() > 1e-6) {
       liftDir.normalize();
     } else {
-      liftDir.set(0,0,0);
+      liftDir.set(0, 0, 0);
     }
     
     const liftMag = this.findLift(speed, Cl);
