@@ -165,13 +165,12 @@ export class Aircraft {
     this.plane.quaternion.w += omegaQuat.w;
 
     this.plane.quaternion.normalize();
-    const qdyn = 0.5 * this.airDensity * speed * speed;
     const cbar = 3.0; // mean aerodynamic chord (m)
     const qRate = this.angularVelocity.y;
 
     const Cm =
       -0.05 +
-      (-0.8 * alphaRad) +
+      (-0.8 * (alphaRad + (3 * (Math.PI / 180)))) +
       (-12 * (qRate * cbar / (2 * speed)));
 
     const pitchMoment = qdyn * this.wingArea * cbar * Cm;
