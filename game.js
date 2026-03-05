@@ -6,6 +6,7 @@ import { Aircraft } from './AirplanePhysics.js';
 let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation, planePhysics, last;
 let raycaster = new THREE.Raycaster();
 let trees = [];
+let pointerLocked = false;
 init3d();
 
 async function init3d() {
@@ -149,7 +150,6 @@ async function init3d() {
   canvas.addEventListener('click', () => {
     canvas.requestPointerLock();
   });
-  let pointerLocked = false;
 
   document.addEventListener('pointerlockchange', () => {
     pointerLocked = document.pointerLockElement === canvas;
