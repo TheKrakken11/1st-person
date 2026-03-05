@@ -103,15 +103,18 @@ export class Aircraft {
     const relWind = this.velocity.clone().multiplyScalar(-1);
     const Vhat = relWind.clone().normalize();
 
-    // Aircraft right-wing direction (span axis in world space)
-    const spanDir = new THREE.Vector3(1, 0, 0)
-      .applyQuaternion(this.plane.quaternion)
-      .normalize();
+    const right = new THREE.Vector3(1,0,0)
+      .applyQuaternion(this.plane.quaternion);
 
-    const liftDir = new THREE.Vector3()
-      .crossVectors(Vhat, spanDir)
-      .cross(spanDir)
-      .normalize();
+    let liftDir = new THREE.Vector3()
+      .crossVectors(right, Vhat)
+      .cross(Vhat);
+
+    if (liftDir.lengthSq() > 1e-6) {
+      liftDir.normalize();
+    } else {
+      liftDir.set(0,0,0);
+    }
     
     const liftMag = this.findLift(speed, Cl);
     console.log("Lift:   ", liftMag);
