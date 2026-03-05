@@ -144,6 +144,26 @@ async function init3d() {
     scene.add(tree);
     trees.push(tree);
   }
+
+  const canvas = document.querySelector('canvas'); // your Three.js canvas
+  canvas.addEventListener('click', () => {
+    canvas.requestPointerLock();
+  });
+  let pointerLocked = false;
+
+  document.addEventListener('pointerlockchange', () => {
+    pointerLocked = document.pointerLockElement === canvas;
+  });
+  
+  let mouseDeltaX = 0;
+  let mouseDeltaY = 0;
+
+  document.addEventListener('mousemove', (event) => {
+    if (pointerLocked) {
+      mouseDeltaX += event.movementX;
+      mouseDeltaY += event.movementY;
+    }
+  });
   
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('keydown', (event) => {
@@ -197,12 +217,25 @@ function animate() {
   if (intersects.length > 0) {
     elevation = intersects[0].point.y;
   }
+  updateControls(planePhysics);
   planePhysics.update(dt);
   camera.lookAt(plane.position.x, plane.position.y, plane.position.z);
   const delta = clock.getDelta();
   mixer.update(delta);
   last = performance.now()
   renderer.render(scene, camera);
+}
+
+function updateControls(aircraft) {
+    if (pointerLocked) {
+        const sensitivity = 0.002; // adjust to your preference
+        aircraft.setYawInput(mouseDeltaX * sensitivity);
+        aircraft.setPitchInput(-mouseDeltaY * sensitivity); // invert Y axis
+
+        // Reset deltas after use
+        mouseDeltaX = 0;
+        mouseDeltaY = 0;
+    }
 }
 
 function onWindowResize() {
