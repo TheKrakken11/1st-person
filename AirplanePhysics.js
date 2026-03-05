@@ -100,9 +100,9 @@ export class Aircraft {
     const qdyn = 0.5 * this.airDensity * this.velocity.lengthSq(); // dynamic pressure
 
     // Constants for authority (tune for realism)
-    const pitchAuthority = 5000; // N·m
-    const rollAuthority  = 3000; // N·m
-    const yawAuthority   = 2000; // N·m
+    const pitchAuthority = 25000; // N·m
+    const rollAuthority  = 15000; // N·m
+    const yawAuthority   = 10000; // N·m
 
     // Scale by dynamic pressure to make controls weaker at low speed
     this.torque.y += pitchAuthority * this.pitchInput * Math.min(qdyn/10000, 1);
