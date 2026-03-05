@@ -15,6 +15,13 @@ export class Aircraft {
     this.thrust = 0;
     this.velocity = new THREE.Vector3(0, 1, -200); //m/s
     this.airDensity = 1.225;
+    this.angularVelocity = new THREE.Vector3(); // rad/s (p,q,r)
+    this.torque = new THREE.Vector3();          // body-axis torque
+    this.I = new THREE.Vector3(
+      12000,   // Ixx (roll)
+      80000,   // Iyy (pitch)
+      90000    // Izz (yaw)
+    );
   }
   findLift(velocity, Cl) {
     return 0.5 * this.airDensity * velocity * velocity * this.wingArea * Cl;
@@ -70,10 +77,11 @@ export class Aircraft {
   }
   update(dt) {
     console.clear();
+    this.torque.set(0,0,0); // reset each frame
     this.airDensity = this.findRho();
     const speed = this.velocity.length();
     const velDir = speed > 1e-6 ? this.velocity.clone().normalize() : new THREE.Vector3(0,0,0);
-    // --- BODY-AXIS VELOCITY ---
+
     const bodyVel = this.velocity.clone()
       .applyQuaternion(this.plane.quaternion.clone().invert());
     
@@ -82,15 +90,86 @@ export class Aircraft {
     // Up      = (0, 1,  0)
     
     const u = -bodyVel.z;   // forward velocity component
+    const v = bodyVel.x;    // right velocity component
     const w = -bodyVel.y;    // vertical body component
-    
-    // Prevent divide-by-zero issues at very low speed
     const alphaRad = Math.atan2(w, u);
     console.log("u:    ", u);
     console.log("w:    ", w);
     console.log("AoA:   ", (alphaRad * 180 / Math.PI) + 3);
     const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
     const thrust = this.thrust;
+    // --- ANGULAR DYNAMICS ---
+
+    const omega = this.angularVelocity.clone();
+
+    // I * omega
+    const Iomega = new THREE.Vector3(
+      this.I.x * omega.x,
+      this.I.y * omega.y,
+      this.I.z * omega.z
+    );
+
+    // gyroscopic term ω × (Iω)
+    const gyro = new THREE.Vector3().crossVectors(omega, Iomega);
+
+    // angular acceleration
+    const angularAccel = new THREE.Vector3(
+      (this.torque.x - gyro.x) / this.I.x,
+      (this.torque.y - gyro.y) / this.I.y,
+      (this.torque.z - gyro.z) / this.I.z
+    );
+
+    // integrate
+    this.angularVelocity.add(angularAccel.multiplyScalar(dt));
+    const omegaQuat = new THREE.Quaternion(
+      this.angularVelocity.x * dt * 0.5,
+      this.angularVelocity.y * dt * 0.5,
+      this.angularVelocity.z * dt * 0.5,
+      0
+    );
+
+    omegaQuat.multiply(this.plane.quaternion);
+
+    this.plane.quaternion.x += omegaQuat.x;
+    this.plane.quaternion.y += omegaQuat.y;
+    this.plane.quaternion.z += omegaQuat.z;
+    this.plane.quaternion.w += omegaQuat.w;
+
+    this.plane.quaternion.normalize();
+    const qdyn = 0.5 * this.airDensity * speed * speed;
+    const cbar = 3.0; // mean aerodynamic chord (m)
+    const qRate = this.angularVelocity.y;
+
+    const Cm =
+      -0.05 +
+      (-0.8 * alphaRad) +
+      (-12 * (qRate * cbar / (2 * speed)));
+
+    const pitchMoment = qdyn * this.wingArea * cbar * Cm;
+    this.torque.y += pitchMoment;
+
+    const beta = Math.asin(v / speed);
+
+    const Cn_beta = -0.25;
+
+    const yawMoment =
+      qdyn * this.wingArea * this.wingspan *
+      (Cn_beta * beta);
+
+    this.torque.z += yawMoment;
+    const pRate = this.angularVelocity.x;
+
+    const Cl_p = -0.5;
+
+    const rollMoment =
+      qdyn * this.wingArea * this.wingspan *
+      (Cl_p * (pRate * this.wingspan / (2 * speed)));
+    
+    this.torque.x += rollMoment;
+    
+    // --- BODY-AXIS VELOCITY ---
+    
+    // Prevent divide-by-zero issues at very low speed
 
   
     // --- DRAG (opposes velocity) ---
