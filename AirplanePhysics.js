@@ -22,6 +22,9 @@ export class Aircraft {
       80000,   // Iyy (pitch)
       90000    // Izz (yaw)
     );
+    this.pitchInput = 0; // -1 (nose down) to 1 (nose up)
+    this.rollInput  = 0; // -1 (roll left) to 1 (roll right)
+    this.yawInput   = 0; // -1 (rudder left) to 1 (rudder right)
   }
   findLift(velocity, Cl) {
     return 0.5 * this.airDensity * velocity * velocity * this.wingArea * Cl;
@@ -75,9 +78,35 @@ export class Aircraft {
   updateThrust(thrust) {
     this.thrust = thrust;
   }
+  // Set pitch input from main code
+  setPitchInput(value) {
+    this.pitchInput = THREE.MathUtils.clamp(value, -1, 1);
+  }
+  // Set roll input from main code
+  setRollInput(value) {
+    this.rollInput = THREE.MathUtils.clamp(value, -1, 1);
+  }
+  
+  // Set yaw input from main code
+  setYawInput(value) {
+    this.yawInput = THREE.MathUtils.clamp(value, -1, 1);
+  }
   update(dt) {
     console.clear();
     this.torque.set(0,0,0); // reset each frame
+    // --- CONTROL TORQUES ---
+    const qdyn = 0.5 * this.airDensity * this.velocity.lengthSq(); // dynamic pressure
+
+    // Constants for authority (tune for realism)
+    const pitchAuthority = 5000; // N·m
+    const rollAuthority  = 3000; // N·m
+    const yawAuthority   = 2000; // N·m
+
+    // Scale by dynamic pressure to make controls weaker at low speed
+    this.torque.y += pitchAuthority * this.pitchInput * Math.min(qdyn/10000, 1);
+    this.torque.x += rollAuthority  * this.rollInput  * Math.min(qdyn/10000, 1);
+    this.torque.z += yawAuthority   * this.yawInput   * Math.min(qdyn/10000, 1);
+    
     this.airDensity = this.findRho();
     const speed = this.velocity.length();
     const velDir = speed > 1e-6 ? this.velocity.clone().normalize() : new THREE.Vector3(0,0,0);
