@@ -92,7 +92,9 @@ export class Aircraft {
     this.yawInput = THREE.MathUtils.clamp(value, -1, 1);
   }
   update(dt) {
-    console.clear();
+    if (Math.random() >= 0.7) {
+      console.clear();
+    }
     this.torque.set(0,0,0); // reset each frame
     // --- CONTROL TORQUES ---
     const qdyn = 0.5 * this.airDensity * this.velocity.lengthSq(); // dynamic pressure
