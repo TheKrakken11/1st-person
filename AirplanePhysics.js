@@ -106,10 +106,19 @@ export class Aircraft {
     const right = new THREE.Vector3(1,0,0)
       .applyQuaternion(this.plane.quaternion);
 
-    let liftDir = new THREE.Vector3()
-      .crossVectors(right, Vhat)
-      .cross(Vhat);
+    // Remove lateral component of airflow
+    const Vsym = Vhat.clone().sub(
+      right.clone().multiplyScalar(Vhat.dot(right))
+    );
 
+    if (Vsym.lengthSq() > 1e-6) {
+      Vsym.normalize();
+    }
+
+    let liftDir = new THREE.Vector3()
+      .crossVectors(right, Vsym)
+      .normalize();
+    
     if (liftDir.lengthSq() > 1e-6) {
       liftDir.normalize();
     } else {
