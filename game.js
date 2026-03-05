@@ -7,6 +7,8 @@ let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation,
 let raycaster = new THREE.Raycaster();
 let trees = [];
 let pointerLocked = false;
+let mouseDeltaX = 0;
+let mouseDeltaY = 0;
 init3d();
 
 async function init3d() {
@@ -154,9 +156,6 @@ async function init3d() {
   document.addEventListener('pointerlockchange', () => {
     pointerLocked = document.pointerLockElement === canvas;
   });
-  
-  let mouseDeltaX = 0;
-  let mouseDeltaY = 0;
 
   document.addEventListener('mousemove', (event) => {
     if (pointerLocked) {
