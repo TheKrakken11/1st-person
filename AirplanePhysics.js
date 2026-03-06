@@ -97,7 +97,8 @@ export class Aircraft {
     }
     this.torque.set(0,0,0); // reset each frame
     // --- CONTROL TORQUES ---
-    const qdyn = 0.5 * this.airDensity * this.velocity.lengthSq(); // dynamic pressure
+    const speedSq = this.velocity.lengthSq();
+    const qdyn = 0.5 * this.airDensity * speedSq;
 
     // Constants for authority (tune for realism)
     const pitchAuthority = 25000; // N·m
@@ -151,22 +152,7 @@ export class Aircraft {
     );
 
     // integrate
-    this.angularVelocity.add(angularAccel.multiplyScalar(dt));
-    const omegaQuat = new THREE.Quaternion(
-      this.angularVelocity.x * dt * 0.5,
-      this.angularVelocity.y * dt * 0.5,
-      this.angularVelocity.z * dt * 0.5,
-      0
-    );
 
-    omegaQuat.multiply(this.plane.quaternion);
-
-    this.plane.quaternion.x += omegaQuat.x;
-    this.plane.quaternion.y += omegaQuat.y;
-    this.plane.quaternion.z += omegaQuat.z;
-    this.plane.quaternion.w += omegaQuat.w;
-
-    this.plane.quaternion.normalize();
     const cbar = 3.0; // mean aerodynamic chord (m)
     const qRate = this.angularVelocity.y;
 
@@ -178,7 +164,7 @@ export class Aircraft {
     const pitchMoment = qdyn * this.wingArea * cbar * Cm;
     this.torque.y += pitchMoment;
 
-    const beta = Math.asin(v / speed);
+    const beta = speed > 1e-3 ? Math.asin(THREE.MathUtils.clamp(v / speed, -1, 1)) : 0;
 
     const Cn_beta = -0.25;
 
@@ -196,6 +182,49 @@ export class Aircraft {
       (Cl_p * (pRate * this.wingspan / (2 * speed)));
     
     this.torque.x += rollMoment;
+
+    // --- ANGULAR DYNAMICS ---
+
+    const omega = this.angularVelocity.clone();
+
+    // I * omega
+    const Iomega = new THREE.Vector3(
+      this.I.x * omega.x,
+      this.I.y * omega.y,
+      this.I.z * omega.z
+    );
+    
+    // gyroscopic term ω × (Iω)
+    const gyro = new THREE.Vector3().crossVectors(omega, Iomega);
+    
+    // angular acceleration
+    const angularAccel = new THREE.Vector3(
+      (this.torque.x - gyro.x) / this.I.x,
+      (this.torque.y - gyro.y) / this.I.y,
+      (this.torque.z - gyro.z) / this.I.z
+    );
+
+    // integrate angular velocity
+    this.angularVelocity.addScaledVector(angularAccel, dt);
+
+    // quaternion derivative
+    const q = this.plane.quaternion;
+
+    const omegaQuat = new THREE.Quaternion(
+      this.angularVelocity.x,
+      this.angularVelocity.y,
+      this.angularVelocity.z,
+      0
+    );
+      
+    omegaQuat.multiply(q);
+
+    q.x += 0.5 * omegaQuat.x * dt;
+    q.y += 0.5 * omegaQuat.y * dt;
+    q.z += 0.5 * omegaQuat.z * dt;
+    q.w += 0.5 * omegaQuat.w * dt;
+
+    q.normalize();
     
     // --- BODY-AXIS VELOCITY ---
     
