@@ -130,28 +130,6 @@ export class Aircraft {
     console.log("AoA:   ", (alphaRad * 180 / Math.PI) + 3);
     const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
     const thrust = this.thrust;
-    // --- ANGULAR DYNAMICS ---
-
-    const omega = this.angularVelocity.clone();
-
-    // I * omega
-    const Iomega = new THREE.Vector3(
-      this.I.x * omega.x,
-      this.I.y * omega.y,
-      this.I.z * omega.z
-    );
-
-    // gyroscopic term ω × (Iω)
-    const gyro = new THREE.Vector3().crossVectors(omega, Iomega);
-
-    // angular acceleration
-    const angularAccel = new THREE.Vector3(
-      (this.torque.x - gyro.x) / this.I.x,
-      (this.torque.y - gyro.y) / this.I.y,
-      (this.torque.z - gyro.z) / this.I.z
-    );
-
-    // integrate
 
     const cbar = 3.0; // mean aerodynamic chord (m)
     const qRate = this.angularVelocity.y;
@@ -159,7 +137,7 @@ export class Aircraft {
     const Cm =
       -0.05 +
       (-0.8 * (alphaRad + (3 * (Math.PI / 180)))) +
-      (-12 * (qRate * cbar / (2 * speed)));
+      (-12 * (qRate * cbar / (2 * Math.max(speed, 0.1)))));
 
     const pitchMoment = qdyn * this.wingArea * cbar * Cm;
     this.torque.y += pitchMoment;
@@ -179,7 +157,7 @@ export class Aircraft {
 
     const rollMoment =
       qdyn * this.wingArea * this.wingspan *
-      (Cl_p * (pRate * this.wingspan / (2 * speed)));
+      (Cl_p * (pRate * this.wingspan / (2 * Math.max(speed, 0.1))));
     
     this.torque.x += rollMoment;
 
