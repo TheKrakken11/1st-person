@@ -99,16 +99,6 @@ export class Aircraft {
     // --- CONTROL TORQUES ---
     const speedSq = this.velocity.lengthSq();
     const qdyn = 0.5 * this.airDensity * speedSq;
-
-    // Constants for authority (tune for realism)
-    const pitchAuthority = 25000; // N·m
-    const rollAuthority  = 15000; // N·m
-    const yawAuthority   = 10000; // N·m
-
-    // Scale by dynamic pressure to make controls weaker at low speed
-    this.torque.y += pitchAuthority * this.pitchInput * Math.min(qdyn/10000, 1);
-    this.torque.x += rollAuthority  * this.rollInput  * Math.min(qdyn/10000, 1);
-    this.torque.z += yawAuthority   * this.yawInput   * Math.min(qdyn/10000, 1);
     
     this.airDensity = this.findRho();
     const speed = this.velocity.length();
@@ -131,13 +121,15 @@ export class Aircraft {
     const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
     const thrust = this.thrust;
     const elevatorDeflection = this.pitchInput * 20 * (Math.PI / 180);
+    const aileronDeflection = this.rollInput * 20 * (Math.PI / 180);
+    const rudderDeflection  = this.yawInput  * 25 * (Math.PI / 180);
 
     const cbar = 3.0; // mean aerodynamic chord (m)
     const qRate = this.angularVelocity.y;
 
     const Cm =
-      -0.05 
-      (-0.8 * (alphaRad + (3 * (Math.PI / 180)))) 
+      -0.05 +
+      (-0.8 * (alphaRad + (3 * (Math.PI / 180)))) +
       (-12 * (qRate * cbar / (2 * Math.max(speed, 0.1)))) +
       (-1.1 * elevatorDeflection);
     const pitchMoment = qdyn * this.wingArea * cbar * Cm;
@@ -151,12 +143,15 @@ export class Aircraft {
     
     const Cn_r = -0.35;
       
+    const Cn_delta_r = 0.1;
+    
+    const Cn =
+      Cn_beta * beta +
+      Cn_r * (rRate * this.wingspan / (2 * Math.max(speed,0.1))) +
+      Cn_delta_r * rudderDeflection;
+    
     const yawMoment =
-      qdyn * this.wingArea * this.wingspan *
-      (
-        Cn_beta * beta +
-        Cn_r * (rRate * this.wingspan / (2 * Math.max(speed,0.1)))
-      );
+      qdyn * this.wingArea * this.wingspan * Cn;
 
     this.torque.z += yawMoment;
     const pRate = this.angularVelocity.x;
@@ -164,13 +159,15 @@ export class Aircraft {
     const Cl_p = -0.5;
 
     const Cl_beta = -0.12;
+    const Cl_delta_a = 0.08;
+    
+    const Cl_roll =
+      Cl_p * (pRate * this.wingspan / (2 * Math.max(speed,0.1))) +
+      Cl_beta * beta +
+      Cl_delta_a * aileronDeflection;
     
     const rollMoment =
-      qdyn * this.wingArea * this.wingspan *
-      (
-        Cl_p * (pRate * this.wingspan / (2 * Math.max(speed,0.1))) +
-        Cl_beta * beta
-      );
+      qdyn * this.wingArea * this.wingspan * Cl_roll;
     
     this.torque.x += rollMoment;
 
