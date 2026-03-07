@@ -130,15 +130,16 @@ export class Aircraft {
     console.log("AoA:   ", (alphaRad * 180 / Math.PI) + 3);
     const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
     const thrust = this.thrust;
+    const elevatorDeflection = this.pitchInput * 20 * (Math.PI / 180);
 
     const cbar = 3.0; // mean aerodynamic chord (m)
     const qRate = this.angularVelocity.y;
 
     const Cm =
-      -0.05 +
-      (-0.8 * (alphaRad + (3 * (Math.PI / 180)))) +
-      (-12 * (qRate * cbar / (2 * Math.max(speed, 0.1)))));
-
+      -0.05 
+      (-0.8 * (alphaRad + (3 * (Math.PI / 180)))) 
+      (-12 * (qRate * cbar / (2 * Math.max(speed, 0.1)))) +
+      (-1.1 * elevatorDeflection);
     const pitchMoment = qdyn * this.wingArea * cbar * Cm;
     this.torque.y += pitchMoment;
 
@@ -146,18 +147,30 @@ export class Aircraft {
 
     const Cn_beta = -0.25;
 
+    const rRate = this.angularVelocity.z;
+    
+    const Cn_r = -0.35;
+      
     const yawMoment =
       qdyn * this.wingArea * this.wingspan *
-      (Cn_beta * beta);
+      (
+        Cn_beta * beta +
+        Cn_r * (rRate * this.wingspan / (2 * Math.max(speed,0.1)))
+      );
 
     this.torque.z += yawMoment;
     const pRate = this.angularVelocity.x;
 
     const Cl_p = -0.5;
 
+    const Cl_beta = -0.12;
+    
     const rollMoment =
       qdyn * this.wingArea * this.wingspan *
-      (Cl_p * (pRate * this.wingspan / (2 * Math.max(speed, 0.1))));
+      (
+        Cl_p * (pRate * this.wingspan / (2 * Math.max(speed,0.1))) +
+        Cl_beta * beta
+      );
     
     this.torque.x += rollMoment;
 
