@@ -96,11 +96,11 @@ export class Aircraft {
       console.clear();
     }
     this.torque.set(0,0,0); // reset each frame
+    this.airDensity = this.findRho();
     // --- CONTROL TORQUES ---
     const speedSq = this.velocity.lengthSq();
     const qdyn = 0.5 * this.airDensity * speedSq;
     
-    this.airDensity = this.findRho();
     const speed = this.velocity.length();
     const velDir = speed > 1e-6 ? this.velocity.clone().normalize() : new THREE.Vector3(0,0,0);
 
@@ -171,7 +171,7 @@ export class Aircraft {
     
     this.torque.x += rollMoment;
 
-    this.torque.addScaledVector(this.angularVelocity, -5000);
+    this.torque.addScaledVector(this.angularVelocity, -800);
     // --- ANGULAR DYNAMICS ---
 
     const omega = this.angularVelocity.clone();
@@ -195,6 +195,7 @@ export class Aircraft {
 
     // integrate angular velocity
     this.angularVelocity.addScaledVector(angularAccel, dt);
+    this.angularVelocity.clampLength(0, 5);
 
     // quaternion derivative
     const q = this.plane.quaternion;
