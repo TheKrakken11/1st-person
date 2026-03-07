@@ -171,7 +171,8 @@ export class Aircraft {
     
     this.torque.x += rollMoment;
 
-    this.torque.addScaledVector(this.angularVelocity, -800);
+    const dampingCoeff = 200 + speed * 2;
+    this.torque.addScaledVector(this.angularVelocity, -dampingCoeff);
     // --- ANGULAR DYNAMICS ---
 
     const omega = this.angularVelocity.clone();
