@@ -129,7 +129,7 @@ export class Aircraft {
     const alphaTrim = 3 * Math.PI / 180;
     const Cm =
       -0.05 +
-      (-0.8 * (alphaRad - alphaTrim)) +
+      (-0.8 * ((alphaRad + (3 * (Math.PI / 180))) - alphaTrim)) +
       (-12 * (qRate * cbar / (2 * Math.max(speed, 0.1)))) +
       (-1.1 * elevatorDeflection);
     const pitchMoment = qdyn * this.wingArea * cbar * Cm;
@@ -257,7 +257,7 @@ export class Aircraft {
       liftDir.set(0, 0, 0);
     }
     
-    const liftMag = this.findLift(speed, Cl);
+    const liftMag = this.findLift(Math.max(speed,0.1), Cl);
     console.log("Lift:   ", liftMag);
     const liftForce = liftDir.multiplyScalar(liftMag);
     // --- THRUST (forward along aircraft nose) ---
