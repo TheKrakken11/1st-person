@@ -13,14 +13,14 @@ export class Aircraft {
     this.plane = object; //three.js object with position, rotation, etc.
     this.wingspan = wingspan * 0.3048;
     this.thrust = 0;
-    this.velocity = new THREE.Vector3(0, 1, -200); //m/s
+    this.velocity = new THREE.Vector3(0, 0, -200); //m/s
     this.airDensity = 1.225;
     this.angularVelocity = new THREE.Vector3(); // rad/s (p,q,r)
     this.torque = new THREE.Vector3();          // body-axis torque
     this.I = new THREE.Vector3(
-      12000,   // Ixx (roll)
-      80000,   // Iyy (pitch)
-      90000    // Izz (yaw)
+      40000,
+      90000,
+      120000
     );
     this.pitchInput = 0; // -1 (nose down) to 1 (nose up)
     this.rollInput  = 0; // -1 (roll left) to 1 (roll right)
@@ -126,10 +126,10 @@ export class Aircraft {
 
     const cbar = 3.0; // mean aerodynamic chord (m)
     const qRate = this.angularVelocity.y;
-
+    const alphaTrim = 3 * Math.PI / 180;
     const Cm =
       -0.05 +
-      (-0.8 * (alphaRad + (3 * (Math.PI / 180)))) +
+      (-0.8 * (alphaRad - alphaTrim)) +
       (-12 * (qRate * cbar / (2 * Math.max(speed, 0.1)))) +
       (-1.1 * elevatorDeflection);
     const pitchMoment = qdyn * this.wingArea * cbar * Cm;
@@ -171,6 +171,7 @@ export class Aircraft {
     
     this.torque.x += rollMoment;
 
+    this.torque.addScaledVector(this.angularVelocity, -5000);
     // --- ANGULAR DYNAMICS ---
 
     const omega = this.angularVelocity.clone();
@@ -213,6 +214,7 @@ export class Aircraft {
     q.w += 0.5 * omegaQuat.w * dt;
 
     q.normalize();
+
     
     // --- BODY-AXIS VELOCITY ---
     
