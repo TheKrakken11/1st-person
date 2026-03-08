@@ -304,8 +304,8 @@ export class Aircraft {
     // stop spinning
     this.angularVelocity.multiplyScalar(0.2);
   }
-  console.log("roll torque:", rollTorque);
-  console.log("yaw torque:", yawTorque);
+  console.log("roll torque:", this.torque.z);
+  console.log("yaw torque:", this.torque.y);
     
   this.plane.position.addScaledVector(this.velocity, dt);
   }
