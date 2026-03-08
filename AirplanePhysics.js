@@ -138,6 +138,7 @@ export class Aircraft {
   const alphaTrim = 3 * Math.PI/180;
 
   // --- PITCH MOMENT ---
+    
   const Cm =
       -0.05
     + (-0.8 * ((alphaRad + 3*(Math.PI/180)) - alphaTrim))
@@ -187,7 +188,7 @@ export class Aircraft {
 
   // --- ANGULAR DYNAMICS ---
 
-  const omega = this.angularVelocity.clone();
+  let omega = this.angularVelocity.clone();
 
   const Iomega = new THREE.Vector3(
     this.I.x * omega.x,
@@ -210,6 +211,7 @@ export class Aircraft {
   }
 
   this.angularVelocity.clampLength(0, 5);
+  omega = this.angularVelocity;
 
   // --- QUATERNION INTEGRATION (FIXED ORDER) ---
 
@@ -254,6 +256,17 @@ export class Aircraft {
   const liftMag = this.findLift(speed, Cl);
   const liftForce = liftDir.multiplyScalar(liftMag);
 
+  const Cy_beta = -0.98; // typical value
+  const Cy = Cy_beta * beta;
+
+  const sideForceMag = qdyn * this.wingArea * Cy;
+
+  const sideDir = new THREE.Vector3()
+    .crossVectors(relWind, liftDir)
+    .normalize();
+
+  const sideForce = sideDir.multiplyScalar(sideForceMag);
+
   // --- THRUST ---
   const thrustForce = new THREE.Vector3(0,0,-1)
     .applyQuaternion(this.plane.quaternion)
@@ -267,7 +280,8 @@ export class Aircraft {
     .add(dragForce)
     .add(liftForce)
     .add(thrustForce)
-    .add(weightForce);
+    .add(weightForce)
+    .add(sideForce);
 
   // --- LINEAR MOTION ---
   const acceleration = totalForce.multiplyScalar(1 / this.mass);
