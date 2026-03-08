@@ -263,8 +263,6 @@ export class Aircraft {
   const Cy_beta = -0.98; // typical value
   const Cy = Cy_beta * beta;
 
-  const sideForceMag = qdyn * this.wingArea * Cy;
-
   const sideDir = new THREE.Vector3()
     .crossVectors(relWind, liftDir)
     .normalize();
