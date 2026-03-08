@@ -13,7 +13,9 @@ export class Aircraft {
     this.plane = object; //three.js object with position, rotation, etc.
     this.wingspan = wingspan * 0.3048;
     this.thrust = 0;
-    this.velocity = new THREE.Vector3(0, 0, -200); //m/s
+    this.velocity = new THREE.Vector3(0,0,-1)
+      .applyQuaternion(object.quaternion)
+      .multiplyScalar(200);
     this.airDensity = 1.225;
     this.angularVelocity = new THREE.Vector3(); // rad/s (p,q,r)
     this.torque = new THREE.Vector3();          // body-axis torque
