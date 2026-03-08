@@ -297,14 +297,15 @@ export class Aircraft {
     this.plane.position.y = elevation;
 
     this.velocity.y = Math.max(0, this.velocity.y);
-
     // ground friction
     this.velocity.x *= 0.8;
     this.velocity.z *= 0.8;
 
     // stop spinning
-    this.angularVelocity.multiplyScalar(0.3);
+    this.angularVelocity.multiplyScalar(0.2);
   }
+  console.log("roll torque:", rollTorque);
+  console.log("yaw torque:", yawTorque);
     
   this.plane.position.addScaledVector(this.velocity, dt);
   }
