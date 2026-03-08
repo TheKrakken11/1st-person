@@ -235,24 +235,15 @@ export class Aircraft {
   const dragForce = velDir.clone().multiplyScalar(-dragMag);
 
   // --- LIFT ---
-  const relWind = this.velocity.clone().multiplyScalar(-1);
-  const Vhat = relWind.clone().normalize();
-
+  const relWind = this.velocity.clone().multiplyScalar(-1).normalize();
+    
   const right = new THREE.Vector3(1,0,0)
     .applyQuaternion(this.plane.quaternion);
-
-  const up = new THREE.Vector3(0,1,0)
-    .applyQuaternion(this.plane.quaternion);
-
-  const Vsym = Vhat.clone().sub(
-    right.clone().multiplyScalar(Vhat.dot(right))
-  );
-
-  if (Vsym.lengthSq() > 1e-6) Vsym.normalize();
-
-  let liftDir = up.clone().sub(
-    Vsym.clone().multiplyScalar(up.dot(Vsym))
-  );
+    
+  const liftDir = new THREE.Vector3()
+    .crossVectors(relWind, right)
+    .cross(relWind)
+    .normalize();
 
   if (liftDir.lengthSq() > 1e-6) {
     liftDir.normalize();
