@@ -93,7 +93,7 @@ export class Aircraft {
   setYawInput(value) {
     this.yawInput = THREE.MathUtils.clamp(value, -1, 1);
   }
-  update(dt) {
+  update(dt, elevation) {
 
   this.torque.set(0,0,0);
 
@@ -141,7 +141,7 @@ export class Aircraft {
     
   const Cm =
       -0.05
-    + (-0.8 * ((alphaRad + 3*(Math.PI/180)) - alphaTrim))
+    + (-2.5 * ((alphaRad + 3*(Math.PI/180)) - alphaTrim))
     + (-12 * (qRate * cbar / (2 * speed)))
     + (-1.1 * elevatorDeflection);
 
@@ -169,10 +169,12 @@ export class Aircraft {
   const Cl_beta = -0.12;
   const Cl_delta_a = 0.08;
 
+  const Cl_dihedral = -0.25 * beta;
   const Cl_roll =
       Cl_p * (pRate * this.wingspan / (2 * speed))
     + Cl_beta * beta
-    + Cl_delta_a * aileronDeflection;
+    + Cl_delta_a * aileronDeflection
+    + Cl_dihedral;
 
   const rollMoment =
     qdyn * this.wingArea * this.wingspan * Cl_roll;
@@ -253,7 +255,9 @@ export class Aircraft {
     liftDir.set(0,0,0);
   }
 
-  const liftMag = this.findLift(speed, Cl);
+  const up = new THREE.Vector3(0,1,0);
+  const liftVerticalFactor = Math.max(0, liftDir.dot(up));
+  const liftMag = this.findLift(speed, Cl) * (0.7 + 0.3 * liftVerticalFactor);
   const liftForce = liftDir.multiplyScalar(liftMag);
 
   const Cy_beta = -0.98; // typical value
@@ -265,7 +269,8 @@ export class Aircraft {
     .crossVectors(relWind, liftDir)
     .normalize();
 
-  const sideForce = sideDir.multiplyScalar(sideForceMag);
+  const verticalTailArea = this.wingArea * 0.12;
+  const sideForceMag = qdyn * verticalTailArea * Cy;
 
   // --- THRUST ---
   const thrustForce = new THREE.Vector3(0,0,-1)
@@ -288,6 +293,11 @@ export class Aircraft {
 
   this.velocity.addScaledVector(acceleration, dt);
 
+  if (this.plane.position.y < elevation) {
+    this.plane.position.y = elevation;
+    this.velocity.y = Math.max(0, this.velocity.y);
+  }
+    
   this.plane.position.addScaledVector(this.velocity, dt);
   }
 }
