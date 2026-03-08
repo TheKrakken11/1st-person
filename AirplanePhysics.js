@@ -216,7 +216,6 @@ export class Aircraft {
   const q = this.plane.quaternion;
 
   // angular velocity in body frame
-  const omega = this.angularVelocity.clone();
   const dq = new THREE.Quaternion(
     omega.x * dt * 0.5,
     omega.y * dt * 0.5,
