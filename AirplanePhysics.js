@@ -20,9 +20,9 @@ export class Aircraft {
     this.angularVelocity = new THREE.Vector3(); // rad/s (p,q,r)
     this.torque = new THREE.Vector3();          // body-axis torque
     this.I = new THREE.Vector3(
-      40000,
-      90000,
-      120000
+      800000,
+      1500000,
+      2000000
     );
     this.pitchInput = 0; // -1 (nose down) to 1 (nose up)
     this.rollInput  = 0; // -1 (roll left) to 1 (roll right)
@@ -114,12 +114,12 @@ export class Aircraft {
 
   const u = -bodyVel.z;   // forward
   const v =  bodyVel.x;   // right
-  const w = -bodyVel.y;   // down
+  const w =  bodyVel.y;   // up
 
-  const alphaRad = Math.atan2(w, u);
+  const alphaRad = Math.atan2(-w, u);
   const alphaDeg = alphaRad * 180 / Math.PI;
 
-  const Cl = this.findCl(alphaDeg + 3);
+  const Cl = this.findCl(alphaDeg);
   const Cd = this.findCd(Cl);
 
   const beta = speed > 1e-3
