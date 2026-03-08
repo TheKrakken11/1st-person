@@ -3,7 +3,7 @@ import { RoomEnvironment } from 'https://unpkg.com/three@0.168.0/examples/jsm/en
 import { GLTFLoader } from './GLTFLoader.js';
 import { Aircraft } from './AirplanePhysics.js';
 
-let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation, planePhysics, last;
+let scene, camera, renderer, model, plane, mixer, thrust, land, fire, elevation, planePhysics, last, planeMinY;
 let raycaster = new THREE.Raycaster();
 let trees = [];
 let pointerLocked = false;
@@ -214,7 +214,9 @@ function animate() {
   raycaster.set(new THREE.Vector3(plane.position.x, -10, plane.position.z), new THREE.Vector3(0, 1, 0).normalize());
   const intersects = raycaster.intersectObject(model, true);
   if (intersects.length > 0) {
-    elevation = intersects[0].point.y;
+    const hit = intersects[0].point.y;
+    planeMinY = new THREE.Box3().setFromObject(plane).min.y;
+    elevation = hit + (planeMinY - plane.position.y);
   }
   updateControls(planePhysics);
   planePhysics.update(dt, elevation);
