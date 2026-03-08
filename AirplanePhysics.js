@@ -165,9 +165,9 @@ export class Aircraft {
   this.torque.z += yawMoment;
 
   // --- ROLL MOMENT ---
-  const Cl_p = -0.5;
+  const Cl_p = -0.9;
   const Cl_beta = -0.12;
-  const Cl_delta_a = 0.08;
+  const Cl_delta_a = 0.12;
 
   const Cl_dihedral = -0.25 * beta;
   const Cl_roll =
@@ -267,7 +267,7 @@ export class Aircraft {
     .crossVectors(relWind, liftDir)
     .normalize();
 
-  const verticalTailArea = this.wingArea * 0.12;
+  const verticalTailArea = this.wingArea * 0.25;
   const sideForceMag = qdyn * verticalTailArea * Cy;
   const sideForce = sideDir.multiplyScalar(sideForceMag);
     
@@ -292,9 +292,18 @@ export class Aircraft {
 
   this.velocity.addScaledVector(acceleration, dt);
 
-  if (this.plane.position.y < elevation) {
+  if (this.plane.position.y <= elevation) {
+
     this.plane.position.y = elevation;
+
     this.velocity.y = Math.max(0, this.velocity.y);
+
+    // ground friction
+    this.velocity.x *= 0.8;
+    this.velocity.z *= 0.8;
+
+    // stop spinning
+    this.angularVelocity.multiplyScalar(0.3);
   }
     
   this.plane.position.addScaledVector(this.velocity, dt);
