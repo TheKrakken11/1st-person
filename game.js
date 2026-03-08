@@ -217,7 +217,7 @@ function animate() {
     elevation = intersects[0].point.y;
   }
   updateControls(planePhysics);
-  planePhysics.update(dt);
+  planePhysics.update(dt, elevation);
   camera.lookAt(plane.position.x, plane.position.y, plane.position.z);
   const delta = clock.getDelta();
   mixer.update(delta);
