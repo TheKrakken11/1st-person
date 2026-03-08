@@ -92,196 +92,195 @@ export class Aircraft {
     this.yawInput = THREE.MathUtils.clamp(value, -1, 1);
   }
   update(dt) {
-    if (Math.random() >= 0.7) {
-      console.clear();
-    }
-    this.torque.set(0,0,0); // reset each frame
-    this.airDensity = this.findRho();
-    // --- CONTROL TORQUES ---
-    const speedSq = this.velocity.lengthSq();
-    const qdyn = 0.5 * this.airDensity * speedSq;
-    
-    const speed = this.velocity.length();
-    const velDir = speed > 1e-6 ? this.velocity.clone().normalize() : new THREE.Vector3(0,0,0);
 
-    const bodyVel = this.velocity.clone()
-      .applyQuaternion(this.plane.quaternion.clone().invert());
-    
-    // In coordinate system:
-    // Forward = (0, 0, -1)
-    // Up      = (0, 1,  0)
-    
-    const u = -bodyVel.z;   // forward velocity component
-    const v = bodyVel.x;    // right velocity component
-    const w = -bodyVel.y;    // vertical body component
-    const alphaRad = Math.atan2(w, u);
-    console.log("u:    ", u);
-    console.log("w:    ", w);
-    console.log("AoA:   ", (alphaRad * 180 / Math.PI) + 3);
-    const Cl = this.findCl((alphaRad * 180 / Math.PI) + 3);
-    const thrust = this.thrust;
-    const elevatorDeflection = this.pitchInput * 20 * (Math.PI / 180);
-    const aileronDeflection = this.rollInput * 20 * (Math.PI / 180);
-    const rudderDeflection  = this.yawInput  * 25 * (Math.PI / 180);
+  this.torque.set(0,0,0);
 
-    const cbar = 3.0; // mean aerodynamic chord (m)
-    const qRate = this.angularVelocity.y;
-    const alphaTrim = 3 * Math.PI / 180;
-    const Cm =
-      -0.05 +
-      (-0.8 * ((alphaRad + (3 * (Math.PI / 180))) - alphaTrim)) +
-      (-12 * (qRate * cbar / (2 * Math.max(speed, 0.1)))) +
-      (-1.1 * elevatorDeflection);
-    const pitchMoment = qdyn * this.wingArea * cbar * Cm;
-    this.torque.y += pitchMoment;
+  this.airDensity = this.findRho();
 
-    const beta = speed > 1e-3 ? Math.asin(THREE.MathUtils.clamp(v / speed, -1, 1)) : 0;
+  const speedSq = this.velocity.lengthSq();
+  const speed = Math.max(Math.sqrt(speedSq), 0.1);
 
-    const Cn_beta = -0.25;
+  const velDir = speed > 1e-6
+    ? this.velocity.clone().normalize()
+    : new THREE.Vector3();
 
-    const rRate = this.angularVelocity.z;
-    
-    const Cn_r = -0.35;
-      
-    const Cn_delta_r = 0.1;
-    
-    const Cn =
-      Cn_beta * beta +
-      Cn_r * (rRate * this.wingspan / (2 * Math.max(speed,0.1))) +
-      Cn_delta_r * rudderDeflection;
-    
-    const yawMoment =
-      qdyn * this.wingArea * this.wingspan * Cn;
+  const qdyn = 0.5 * this.airDensity * speedSq;
 
-    this.torque.z += yawMoment;
-    const pRate = this.angularVelocity.x;
+  // --- BODY VELOCITY ---
+  const bodyVel = this.velocity.clone()
+    .applyQuaternion(this.plane.quaternion.clone().invert());
 
-    const Cl_p = -0.5;
+  const u = -bodyVel.z;   // forward
+  const v =  bodyVel.x;   // right
+  const w = -bodyVel.y;   // down
 
-    const Cl_beta = -0.12;
-    const Cl_delta_a = 0.08;
-    
-    const Cl_roll =
-      Cl_p * (pRate * this.wingspan / (2 * Math.max(speed,0.1))) +
-      Cl_beta * beta +
-      Cl_delta_a * aileronDeflection;
-    
-    const rollMoment =
-      qdyn * this.wingArea * this.wingspan * Cl_roll;
-    
-    this.torque.x += rollMoment;
+  const alphaRad = Math.atan2(w, u);
+  const alphaDeg = alphaRad * 180 / Math.PI;
 
-    const dampingCoeff = 200 + speed * 2;
-    this.torque.addScaledVector(this.angularVelocity, -dampingCoeff);
-    // --- ANGULAR DYNAMICS ---
+  const Cl = this.findCl(alphaDeg + 3);
+  const Cd = this.findCd(Cl);
 
-    const omega = this.angularVelocity.clone();
+  const beta = speed > 1e-3
+    ? Math.asin(THREE.MathUtils.clamp(v / speed, -0.999, 0.999))
+    : 0;
 
-    // I * omega
-    const Iomega = new THREE.Vector3(
-      this.I.x * omega.x,
-      this.I.y * omega.y,
-      this.I.z * omega.z
-    );
-    
-    // gyroscopic term ω × (Iω)
-    const gyro = new THREE.Vector3().crossVectors(omega, Iomega);
-    
-    // angular acceleration
-    const angularAccel = new THREE.Vector3(
-      (this.torque.x - gyro.x) / this.I.x,
-      (this.torque.y - gyro.y) / this.I.y,
-      (this.torque.z - gyro.z) / this.I.z
-    );
+  const elevatorDeflection = this.pitchInput * 20 * (Math.PI/180);
+  const aileronDeflection  = this.rollInput  * 20 * (Math.PI/180);
+  const rudderDeflection   = this.yawInput   * 25 * (Math.PI/180);
 
-    // integrate angular velocity
-    this.angularVelocity.addScaledVector(angularAccel, dt);
-    this.angularVelocity.clampLength(0, 5);
+  const pRate = this.angularVelocity.x;
+  const qRate = this.angularVelocity.y;
+  const rRate = this.angularVelocity.z;
 
-    // quaternion derivative
-    const q = this.plane.quaternion;
+  const cbar = 3.0;
+  const alphaTrim = 3 * Math.PI/180;
 
-    const omegaQuat = new THREE.Quaternion(
-      this.angularVelocity.x,
-      this.angularVelocity.y,
-      this.angularVelocity.z,
-      0
-    );
-      
-    omegaQuat.multiply(q);
+  // --- PITCH MOMENT ---
+  const Cm =
+      -0.05
+    + (-0.8 * ((alphaRad + 3*(Math.PI/180)) - alphaTrim))
+    + (-12 * (qRate * cbar / (2 * speed)))
+    + (-1.1 * elevatorDeflection);
 
-    q.x += 0.5 * omegaQuat.x * dt;
-    q.y += 0.5 * omegaQuat.y * dt;
-    q.z += 0.5 * omegaQuat.z * dt;
-    q.w += 0.5 * omegaQuat.w * dt;
+  const pitchMoment = qdyn * this.wingArea * cbar * Cm;
 
-    q.normalize();
+  this.torque.y += pitchMoment;
 
-    
-    // --- BODY-AXIS VELOCITY ---
-    
-    // Prevent divide-by-zero issues at very low speed
+  // --- YAW MOMENT ---
+  const Cn_beta = -0.25;
+  const Cn_r = -0.35;
+  const Cn_delta_r = 0.1;
 
-  
-    // --- DRAG (opposes velocity) ---
-    const Cd = this.findCd(Cl);
-    const dragMag = this.findDrag(speed, Cd);
-    const dragForce = velDir.clone().multiplyScalar(-dragMag);
+  const Cn =
+      Cn_beta * beta
+    + Cn_r * (rRate * this.wingspan / (2 * speed))
+    + Cn_delta_r * rudderDeflection;
 
-    // --- LIFT (perpendicular to airflow and wingspan) ---
+  const yawMoment =
+    qdyn * this.wingArea * this.wingspan * Cn;
 
-    const relWind = this.velocity.clone().multiplyScalar(-1);
-    const Vhat = relWind.clone().normalize();
+  this.torque.z += yawMoment;
 
-    const right = new THREE.Vector3(1,0,0)
-      .applyQuaternion(this.plane.quaternion);
+  // --- ROLL MOMENT ---
+  const Cl_p = -0.5;
+  const Cl_beta = -0.12;
+  const Cl_delta_a = 0.08;
 
-    const up = new THREE.Vector3(0,1,0)
-      .applyQuaternion(this.plane.quaternion);
+  const Cl_roll =
+      Cl_p * (pRate * this.wingspan / (2 * speed))
+    + Cl_beta * beta
+    + Cl_delta_a * aileronDeflection;
 
-    // Remove lateral component (symmetry constraint)
-    const Vsym = Vhat.clone().sub(
-      right.clone().multiplyScalar(Vhat.dot(right))
-    );
+  const rollMoment =
+    qdyn * this.wingArea * this.wingspan * Cl_roll;
 
-    if (Vsym.lengthSq() > 1e-6) {
-      Vsym.normalize();
-    }
+  this.torque.x += rollMoment;
 
-    // Lift is perpendicular to airflow inside symmetry plane
-    let liftDir = up.clone().sub(
-      Vsym.clone().multiplyScalar(up.dot(Vsym))
-    );
+  // --- STABILIZATION DAMPING (ROLL + YAW) ---
+  const damping = 200 + speed * 2;
 
-    if (liftDir.lengthSq() > 1e-6) {
-      liftDir.normalize();
-    } else {
-      liftDir.set(0, 0, 0);
-    }
-    
-    const liftMag = this.findLift(Math.max(speed,0.1), Cl);
-    console.log("Lift:   ", liftMag);
-    const liftForce = liftDir.multiplyScalar(liftMag);
-    // --- THRUST (forward along aircraft nose) ---
-    const thrustForce = new THREE.Vector3(0, 0, -1)
-      .applyQuaternion(this.plane.quaternion)
-      .multiplyScalar(this.thrust);
+  this.torque.x += -this.angularVelocity.x * damping;
+  this.torque.z += -this.angularVelocity.z * damping;
 
-    // --- WEIGHT ---
-    const weightForce = new THREE.Vector3(0, -this.findWeight(), 0);
+  // --- ANGULAR DYNAMICS ---
 
-    // --- TOTAL FORCE ---
-    const totalForce = new THREE.Vector3()
-      .add(dragForce)
-      .add(liftForce)
-      .add(thrustForce)
-      .add(weightForce);
+  const omega = this.angularVelocity.clone();
 
-    // --- ACCELERATION ---
-    const acceleration = totalForce.multiplyScalar(1 / this.mass);
+  const Iomega = new THREE.Vector3(
+    this.I.x * omega.x,
+    this.I.y * omega.y,
+    this.I.z * omega.z
+  );
 
-    this.velocity.add(acceleration.multiplyScalar(dt));
-    console.log("Velocity:   ", this.velocity);
-    this.plane.position.add(this.velocity.clone().multiplyScalar(dt));
+  const gyro = new THREE.Vector3().crossVectors(omega, Iomega);
+
+  const angularAccel = new THREE.Vector3(
+    (this.torque.x - gyro.x) / this.I.x,
+    (this.torque.y - gyro.y) / this.I.y,
+    (this.torque.z - gyro.z) / this.I.z
+  );
+
+  this.angularVelocity.addScaledVector(angularAccel, dt);
+
+  if (this.angularVelocity.length() < 1e-5) {
+    this.angularVelocity.set(0,0,0);
+  }
+
+  this.angularVelocity.clampLength(0, 5);
+
+  // --- QUATERNION INTEGRATION (FIXED ORDER) ---
+
+  const q = this.plane.quaternion;
+
+  const omegaQuat = new THREE.Quaternion(
+    this.angularVelocity.x,
+    this.angularVelocity.y,
+    this.angularVelocity.z,
+    0
+  );
+
+  const qDot = q.clone().multiply(omegaQuat);
+
+  q.x += 0.5 * qDot.x * dt;
+  q.y += 0.5 * qDot.y * dt;
+  q.z += 0.5 * qDot.z * dt;
+  q.w += 0.5 * qDot.w * dt;
+
+  q.normalize();
+
+  // --- DRAG ---
+  const dragMag = this.findDrag(speed, Cd);
+  const dragForce = velDir.clone().multiplyScalar(-dragMag);
+
+  // --- LIFT ---
+  const relWind = this.velocity.clone().multiplyScalar(-1);
+  const Vhat = relWind.clone().normalize();
+
+  const right = new THREE.Vector3(1,0,0)
+    .applyQuaternion(this.plane.quaternion);
+
+  const up = new THREE.Vector3(0,1,0)
+    .applyQuaternion(this.plane.quaternion);
+
+  const Vsym = Vhat.clone().sub(
+    right.clone().multiplyScalar(Vhat.dot(right))
+  );
+
+  if (Vsym.lengthSq() > 1e-6) Vsym.normalize();
+
+  let liftDir = up.clone().sub(
+    Vsym.clone().multiplyScalar(up.dot(Vsym))
+  );
+
+  if (liftDir.lengthSq() > 1e-6) {
+    liftDir.normalize();
+  } else {
+    liftDir.set(0,0,0);
+  }
+
+  const liftMag = this.findLift(speed, Cl);
+  const liftForce = liftDir.multiplyScalar(liftMag);
+
+  // --- THRUST ---
+  const thrustForce = new THREE.Vector3(0,0,-1)
+    .applyQuaternion(this.plane.quaternion)
+    .multiplyScalar(this.thrust);
+
+  // --- WEIGHT ---
+  const weightForce = new THREE.Vector3(0,-this.findWeight(),0);
+
+  // --- TOTAL FORCE ---
+  const totalForce = new THREE.Vector3()
+    .add(dragForce)
+    .add(liftForce)
+    .add(thrustForce)
+    .add(weightForce);
+
+  // --- LINEAR MOTION ---
+  const acceleration = totalForce.multiplyScalar(1 / this.mass);
+
+  this.velocity.addScaledVector(acceleration, dt);
+
+  this.plane.position.addScaledVector(this.velocity, dt);
   }
 }
