@@ -194,7 +194,8 @@ function createCombinedClip(allClips, names, newName) {
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
-  const dt = (performance.now() - last) / 1000;
+  let dt = (performance.now() - last) / 1000;
+  dt = Math.min(dt, 0.033); // max ~30 FPS physics step
   if (trees.some(tree => tree.position.y === -10)) {
     trees.forEach((tree) => {
       if (tree.position.y === -10) {
