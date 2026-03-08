@@ -269,7 +269,8 @@ export class Aircraft {
 
   const verticalTailArea = this.wingArea * 0.12;
   const sideForceMag = qdyn * verticalTailArea * Cy;
-
+  const sideForce = sideDir.multiplyScalar(sideForceMag);
+    
   // --- THRUST ---
   const thrustForce = new THREE.Vector3(0,0,-1)
     .applyQuaternion(this.plane.quaternion)
