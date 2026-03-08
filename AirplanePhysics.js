@@ -15,7 +15,7 @@ export class Aircraft {
     this.thrust = 0;
     this.velocity = new THREE.Vector3(0,0,-1)
       .applyQuaternion(object.quaternion)
-      .multiplyScalar(200);
+      .multiplyScalar(75);
     this.airDensity = 1.225;
     this.angularVelocity = new THREE.Vector3(); // rad/s (p,q,r)
     this.torque = new THREE.Vector3();          // body-axis torque
@@ -182,6 +182,7 @@ export class Aircraft {
   const damping = 200 + speed * 2;
 
   this.torque.x += -this.angularVelocity.x * damping;
+  this.torque.y += -this.angularVelocity.y * damping * 0.5;
   this.torque.z += -this.angularVelocity.z * damping;
 
   // --- ANGULAR DYNAMICS ---
@@ -214,20 +215,20 @@ export class Aircraft {
 
   const q = this.plane.quaternion;
 
-  const omegaQuat = new THREE.Quaternion(
-    this.angularVelocity.x,
-    this.angularVelocity.y,
-    this.angularVelocity.z,
+  // angular velocity in body frame
+  const omega = this.angularVelocity.clone();
+  const dq = new THREE.Quaternion(
+    omega.x * dt * 0.5,
+    omega.y * dt * 0.5,
+    omega.z * dt * 0.5,
     0
   );
-
-  const qDot = q.clone().multiply(omegaQuat);
-
-  q.x += 0.5 * qDot.x * dt;
-  q.y += 0.5 * qDot.y * dt;
-  q.z += 0.5 * qDot.z * dt;
-  q.w += 0.5 * qDot.w * dt;
-
+  
+  dq.multiply(q);
+  q.x += dq.x;
+  q.y += dq.y;
+  q.z += dq.z;
+  q.w += dq.w;
   q.normalize();
 
   // --- DRAG ---
