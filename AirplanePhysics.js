@@ -116,7 +116,7 @@ export class Aircraft {
     const qdyn = 0.5 * this.airDensity * speed * speed;
 
     // --- AERODYNAMIC COEFFICIENTS ---
-    const Cl = this.findCl(alpha * 180/Math.PI);
+    const Cl = this.findCl((alpha * 180/Math.PI)+3); // built-in 3 degree dihedral
     const Cd = this.findCd(Cl);
     const Cy = -0.5 * beta; // mild sideslip damping
 
