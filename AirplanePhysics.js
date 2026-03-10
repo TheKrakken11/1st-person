@@ -103,46 +103,46 @@ export class Aircraft {
     const speed = Math.max(this.velocity.length(), 0.1);
     const velDir = this.velocity.clone().normalize();
 
-    // --- AERODYNAMIC ANGLES ---
-    const forwardBody = new THREE.Vector3(0,0,-1).applyQuaternion(q);
-    const alpha = Math.atan2(
-        this.velocity.y,
-        new THREE.Vector3(this.velocity.x,0,this.velocity.z).length()
-    );
-    const beta = Math.asin(THREE.MathUtils.clamp(
-        new THREE.Vector3(this.velocity.x,0,this.velocity.z).cross(this.velocity).length() / speed,
-        -1,1
-    ));
+    // --- BODY AXES ---
+    const forward = new THREE.Vector3(0,0,-1).applyQuaternion(q);
+    const right   = new THREE.Vector3(1,0,0).applyQuaternion(q);
+    const up      = new THREE.Vector3(0,1,0);
+
+    // --- ANGLES OF ATTACK AND SIDESLIP ---
+    const alpha = Math.atan2(this.velocity.y, Math.sqrt(this.velocity.x*this.velocity.x + this.velocity.z*this.velocity.z));
+    const beta  = Math.asin(THREE.MathUtils.clamp(this.velocity.x/speed, -1,1));
 
     // --- DYNAMIC PRESSURE ---
     const qdyn = 0.5 * this.airDensity * speed * speed;
 
-    // --- LIFT / DRAG / SIDE FORCES ---
+    // --- AERODYNAMIC COEFFICIENTS ---
     const Cl = this.findCl(alpha * 180/Math.PI);
     const Cd = this.findCd(Cl);
-    const Cy = -0.9 * beta;
+    const Cy = -0.5 * beta; // mild sideslip damping
 
-    // --- LIFT DIRECTION (perpendicular to velocity, projected on horizontal plane for stability) ---
-    let spanDir = new THREE.Vector3(1,0,0).applyQuaternion(q); // plane right vector
-    let liftDir = new THREE.Vector3().crossVectors(velDir, spanDir).cross(velDir).normalize();
+    // --- LIFT DIRECTION ---
+    // Blend between velocity-perpendicular and world-up for stability
+    const spanDir = right.clone();
+    let liftDirVel = new THREE.Vector3().crossVectors(velDir, spanDir).cross(velDir).normalize();
+    const speedThreshold = 10; // m/s
+    const factor = Math.min(speed / speedThreshold, 1);
+    const liftDir = liftDirVel.clone().multiplyScalar(factor)
+                     .add(up.clone().multiplyScalar(1 - factor))
+                     .normalize();
 
-    // Optional: project lift perpendicular to gravity to reduce sideways drift
-    liftDir = liftDir.clone().projectOnPlane(new THREE.Vector3(0,1,0)).normalize();
+    // --- FORCES ---
+    const Lift  = liftDir.clone().multiplyScalar(qdyn * this.wingArea * Cl);
+    const Drag  = velDir.clone().multiplyScalar(qdyn * this.wingArea * Cd + this.thrust);
+    const Side  = right.clone().multiplyScalar(qdyn * this.wingArea * Cy);
+    const Weight = new THREE.Vector3(0, -this.findWeight(), 0);
 
-    const Lift = qdyn * this.wingArea * Cl;
-    const Drag = qdyn * this.wingArea * Cd;
-    const Side = qdyn * this.wingArea * Cy;
-
-    const totalForce = new THREE.Vector3()
-        .add(liftDir.clone().multiplyScalar(Lift))
-        .add(velDir.clone().multiplyScalar(-Drag - this.thrust))
-        .add(new THREE.Vector3(0,-this.findWeight(),0))
-        .add(new THREE.Vector3(1,0,0).applyQuaternion(q).multiplyScalar(Side));
+    const totalForce = new THREE.Vector3();
+    totalForce.add(Lift).sub(Drag).add(Side).add(Weight);
 
     // --- LINEAR ACCELERATION ---
     const accel = totalForce.clone().multiplyScalar(1/this.mass);
     this.velocity.addScaledVector(accel, dt);
-    this.velocity.clampLength(0, 2000); // prevent runaway speed
+    this.velocity.clampLength(0, 200); // max speed to prevent runaway
 
     // --- ANGULAR DYNAMICS ---
     const omega = this.angularVelocity;
@@ -150,12 +150,13 @@ export class Aircraft {
     const da = this.rollInput, de = this.pitchInput, dr = this.yawInput;
     const b = this.wingspan, c = this.wingArea / this.wingspan;
 
+    // Stability derivatives
     const Cl_beta = -0.12, Cl_p = -0.6, Cl_da = 0.25;
-    const Cm_alpha = -1.2, Cm_q = -12, Cm_de = -1.3;
+    const Cm_alpha = -1.5, Cm_q = -12, Cm_de = -1.5;
     const Cn_beta = -0.25, Cn_r = -0.35, Cn_dr = 0.15;
 
     const Cl_roll = Cl_beta*beta + Cl_p*(p*b/(2*speed)) + Cl_da*da;
-    const Cm = Cm_alpha*alpha + Cm_q*(qRate*c/(2*speed)) + Cm_de*de - 0.02; // small pitch trim
+    const Cm = Cm_alpha*alpha + Cm_q*(qRate*c/(2*speed)) + Cm_de*de - 0.05; // stronger pitch stability
     const Cn = Cn_beta*beta + Cn_r*(r*b/(2*speed)) + Cn_dr*dr;
 
     const torque = new THREE.Vector3(
@@ -173,9 +174,10 @@ export class Aircraft {
         (torque.z - gyro.z)/this.I.z
     );
 
+    // --- ANGULAR VELOCITY ---
     this.angularVelocity.addScaledVector(angularAccel, dt);
-    this.angularVelocity.clampLength(0, 3);
-    this.angularVelocity.multiplyScalar(0.995); // numerical damping
+    this.angularVelocity.clampLength(0, 2); // limit spin
+    this.angularVelocity.multiplyScalar(0.98); // strong damping for stability
 
     // --- QUATERNION INTEGRATION ---
     const halfdt = 0.5 * dt;
@@ -194,7 +196,7 @@ export class Aircraft {
 
     // --- POSITION UPDATE ---
     this.plane.position.addScaledVector(this.velocity, dt);
-    this.velocity.multiplyScalar(0.9995); // remove small numerical drift
+    this.velocity.multiplyScalar(0.998); // reduce numerical drift
 
     // --- GROUND COLLISION ---
     if(this.plane.position.y <= elevation) {
