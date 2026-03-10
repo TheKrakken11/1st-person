@@ -99,7 +99,6 @@ export class Aircraft {
 
   const q = this.plane.quaternion;
 
-  // BODY AXES
   const forward = new THREE.Vector3(0,0,-1).applyQuaternion(q);
   const right   = new THREE.Vector3(1,0,0).applyQuaternion(q);
   const up      = new THREE.Vector3(0,1,0).applyQuaternion(q);
@@ -109,12 +108,15 @@ export class Aircraft {
   const velBody = this.velocity.clone()
       .applyQuaternion(q.clone().invert());
 
-  const u = -velBody.z;
-  const v = velBody.x;
-  const w = velBody.y;
+  const forwardSpeed = -velBody.z;
+  const sideSpeed = velBody.x;
+  const verticalSpeed = velBody.y;
 
-  const alpha = Math.atan2(w, u);
-  const beta  = Math.atan2(v, speed);
+  const alpha = Math.atan2(verticalSpeed, forwardSpeed);
+
+  const beta = Math.asin(
+      THREE.MathUtils.clamp(sideSpeed / speed, -1, 1)
+  );
 
   const qdyn = 0.5 * this.airDensity * speed * speed;
 
@@ -126,17 +128,25 @@ export class Aircraft {
       1.4
   );
 
-  const Cd = 0.025 + Cl*Cl*0.05;
+  const Cd = 0.025 + Cl * Cl * 0.05;
 
   const liftMag = qdyn * this.wingArea * Cl;
   const dragMag = qdyn * this.wingArea * Cd;
 
-  const liftForce = up.clone().multiplyScalar(liftMag);
-  const dragForce = forward.clone().multiplyScalar(-dragMag);
+  const velDir = this.velocity.clone().normalize();
 
-  // SIDE FORCE (weather vane stability)
+  const liftDir = new THREE.Vector3()
+      .crossVectors(velDir, right)
+      .cross(velDir)
+      .normalize();
+
+  const liftForce = liftDir.multiplyScalar(liftMag);
+  const dragForce = velDir.clone().multiplyScalar(-dragMag);
+
+  // SIDE FORCE
 
   const Cy = -1.2 * beta;
+
   const sideForce = right.clone().multiplyScalar(
       qdyn * this.wingArea * Cy
   );
@@ -162,15 +172,11 @@ export class Aircraft {
 
   this.velocity.addScaledVector(acceleration, dt);
 
-  // -----------------------------
-  // ROTATIONAL DYNAMICS
-  // -----------------------------
+  // ROTATION
 
   const rollRate  = this.angularVelocity.x;
   const pitchRate = this.angularVelocity.y;
   const yawRate   = this.angularVelocity.z;
-
-  // CONTROL EFFECTIVENESS
 
   const rollAccel =
       this.rollInput * 2.5
@@ -191,11 +197,9 @@ export class Aircraft {
   this.angularVelocity.y += pitchAccel * dt;
   this.angularVelocity.z += yawAccel * dt;
 
-  // clamp spin rate (prevents physics explosion)
+  this.angularVelocity.clampScalar(-4,4);
 
-  this.angularVelocity.clampLength(0,4);
-
-  // QUATERNION INTEGRATION
+  // QUATERNION UPDATE
 
   const omega = this.angularVelocity;
 
@@ -206,13 +210,7 @@ export class Aircraft {
       0
   );
 
-  dq.multiply(q);
-
-  q.x += dq.x;
-  q.y += dq.y;
-  q.z += dq.z;
-  q.w += dq.w;
-  q.normalize();
+  q.multiply(dq).normalize();
 
   // POSITION
 
