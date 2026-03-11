@@ -69,13 +69,32 @@ export class Aircraft {
     const factor = 1 - 2.25577e-5 * h;
     return 1.225 * Math.pow(Math.max(factor, 0), 4.25588);
   }
+  // Same signature: findCd(Cl, Cd0 = 0.025, e = 0.85)
   findCd(Cl, Cd0 = 0.025, e = 0.85) {
     const aspectRatio = Math.pow(this.wingspan, 2) / this.wingArea;
-    const inducedDrag = (Cl * Cl) / (Math.PI * aspectRatio * e);
-    return Cd0 + inducedDrag;
+
+    // Induced drag
+    const CdInduced = (Cl * Cl) / (Math.PI * aspectRatio * e);
+
+    // Parasitic / profile drag
+    const CdParasitic = Cd0;
+
+    // Compressibility / transonic drag
+    const speed = Math.max(this.velocity.length(), 0.1);
+    const mach = speed / 343; // speed of sound ~343 m/s at sea level
+    let CdWave = 0;
+    if (mach > 0.8) {
+        const machRise = (mach - 0.8) / 0.2; // normalize 0..1
+        CdWave = 0.02 * Math.pow(machRise, 2); // smooth quadratic rise
+    }
+
+    return CdParasitic + CdInduced + CdWave;
   }
+
+  // Same signature: findDrag(velocity, Cd)
   findDrag(velocity, Cd) {
-    return 0.5 * this.airDensity * velocity * velocity * this.wingArea * Cd;
+    const speed = Math.max(velocity.length(), 0.1);
+    return 0.5 * this.airDensity * speed * speed * this.wingArea * Cd;
   }
   updateThrust(thrust) {
     this.thrust = thrust;
