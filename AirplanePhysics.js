@@ -70,7 +70,7 @@ export class Aircraft {
     return 1.225 * Math.pow(Math.max(factor, 0), 4.25588);
   }
   // Same signature: findCd(Cl, Cd0 = 0.025, e = 0.85)
-  findCd(Cl, Cd0 = 0.021, e = 0.85) {
+  findCd(Cl, Cd0 = 0.021, e = 0.8) {
     const aspectRatio = Math.pow(this.wingspan, 2) / this.wingArea;
 
     // Induced drag
