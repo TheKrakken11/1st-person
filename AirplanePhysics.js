@@ -15,7 +15,7 @@ export class Aircraft {
     this.thrust = 0;
     this.velocity = new THREE.Vector3(0,0,-1)
       .applyQuaternion(object.quaternion)
-      .multiplyScalar(75);
+      .multiplyScalar(300);
     this.airDensity = 1.225;
     this.angularVelocity = new THREE.Vector3(); // rad/s (p,q,r)
     this.torque = new THREE.Vector3();          // body-axis torque
