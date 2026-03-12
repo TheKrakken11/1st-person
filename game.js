@@ -187,6 +187,8 @@ async function init3d() {
   
   canvas.addEventListener("touchend", () => {
     touchActive = false;
+    mouseDeltaX = 0;
+    mouseDeltaY = 0;
   });
   
   window.addEventListener('resize', onWindowResize);
