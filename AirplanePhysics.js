@@ -131,7 +131,7 @@ export class Aircraft {
 
   // --- ANGLE OF ATTACK ---
   const bodyVel = this.velocity.clone().applyQuaternion(q.clone().invert());
-  const alpha = Math.atan2(bodyVel.y, -bodyVel.z);
+  const alpha = Math.atan2(bodyVel.y, -bodyVel.z) + THREE.MathUtils.degToRad(3);
 
   // --- AERODYNAMICS ---
   const Cl = this.findCl(alpha * 180 / Math.PI);
