@@ -146,19 +146,12 @@ export class Aircraft {
 
     // --- LIFT DIRECTION ---
     // Blend between velocity-perpendicular and world-up for stability
-    const liftDir = new THREE.Vector3()
-      .crossVectors(velDir, right)
-      .cross(velDir)
-      .normalize();
+    const liftDir = up.clone();
 
     // --- FORCES ---
     const Lift  = liftDir.clone().multiplyScalar(qdyn * this.wingArea * Cl);
     const Drag  = velDir.clone().multiplyScalar(qdyn * this.wingArea * Cd);
-    const windRight = new THREE.Vector3()
-      .crossVectors(velDir, up)
-      .normalize();
-
-    const Side = windRight.multiplyScalar(qdyn * this.wingArea * Cy);
+    const Side = right.clone().multiplyScalar(qdyn * this.wingArea * Cy);
     const Weight = new THREE.Vector3(0, -this.findWeight(), 0);
 
     const totalForce = new THREE.Vector3();
@@ -181,7 +174,7 @@ export class Aircraft {
     // Stability derivatives
     const Cl_beta = -0.25, Cl_p = -1.2, Cl_da = 0.25;
     const Cm_alpha = -1.5, Cm_q = -12, Cm_de = -1.5;
-    const Cn_beta = -0.25, Cn_r = -0.35, Cn_dr = 0.15;
+    const Cn_beta = -0.25, Cn_r = -1.0, Cn_dr = 0.15;
 
     const Cl_roll = Cl_beta*beta + Cl_p*(p*b/(2*speed)) + Cl_da*da;
     const Cm = Cm_alpha*alpha + Cm_q*(qRate*c/(2*speed)) + Cm_de*de; // stronger pitch stability
