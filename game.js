@@ -9,6 +9,9 @@ let trees = [];
 let pointerLocked = false;
 let mouseDeltaX = 0;
 let mouseDeltaY = 0;
+let touchActive = false;
+let lastTouchX = 0;
+let lastTouchY = 0;
 init3d();
 
 async function init3d() {
@@ -163,6 +166,28 @@ async function init3d() {
       mouseDeltaY += event.movementY;
     }
   });
+
+  canvas.addEventListener("touchstart", (e) => {
+    const touch = e.touches[0];
+    touchActive = true;
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+  });
+  
+  canvas.addEventListener("touchmove", (e) => {
+    if (!touchActive) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - lastTouchX;
+    const dy = touch.clientY - lastTouchY;
+    mouseDeltaX += dx;
+    mouseDeltaY += dy;
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+  });
+  
+  canvas.addEventListener("touchend", () => {
+    touchActive = false;
+  });
   
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('keydown', (event) => {
@@ -227,7 +252,7 @@ function animate() {
 }
 
 function updateControls(aircraft) {
-  if (pointerLocked) {
+  if (pointerLocked || touchActive) {
     const sensitivity = 0.02; // adjust to your preference
     aircraft.setYawInput(-mouseDeltaX * sensitivity);
     aircraft.setRollInput(-mouseDeltaY * sensitivity); // invert Y axis
