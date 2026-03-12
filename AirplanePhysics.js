@@ -142,7 +142,7 @@ export class Aircraft {
     // --- AERODYNAMIC COEFFICIENTS ---
     const Cl = this.findCl((alpha * 180/Math.PI)+3); // built-in 3 degree dihedral
     const Cd = this.findCd(Cl);
-    const Cy = -0.5 * beta; // mild sideslip damping
+    const Cy = -0.1 * beta; // mild sideslip damping
 
     // --- LIFT DIRECTION ---
     // Blend between velocity-perpendicular and world-up for stability
@@ -172,7 +172,7 @@ export class Aircraft {
     const b = this.wingspan, c = this.wingArea / this.wingspan;
 
     // Stability derivatives
-    const Cl_beta = -0.25, Cl_p = -1.2, Cl_da = 0.25;
+    const Cl_beta = -0.6, Cl_p = -2.5, Cl_da = 0.25;
     const Cm_alpha = -1.5, Cm_q = -12, Cm_de = -1.5;
     const Cn_beta = -0.25, Cn_r = -1.0, Cn_dr = 0.15;
 
@@ -198,7 +198,7 @@ export class Aircraft {
     // --- ANGULAR VELOCITY ---
     this.angularVelocity.addScaledVector(angularAccel, dt);
     this.angularVelocity.clampLength(0, 2); // limit spin
-    this.angularVelocity.multiplyScalar(0.98); // strong damping for stability
+    this.angularVelocity.multiplyScalar(0.95); // strong damping for stability
 
     // --- QUATERNION INTEGRATION ---
     const halfdt = 0.5 * dt;
