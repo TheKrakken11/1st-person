@@ -134,7 +134,7 @@ export class Aircraft {
   const alpha = Math.atan2(bodyVel.y, -bodyVel.z);
 
   // --- AERODYNAMICS ---
-  const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha)) + this.findCl(3); // fixed Cl boost
+  const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha));
   const Cd = this.findCd(Cl);
 
   const lift = qdyn * this.wingArea * Cl;
