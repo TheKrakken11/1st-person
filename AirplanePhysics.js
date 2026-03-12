@@ -164,6 +164,9 @@ export class Aircraft {
     const totalForce = new THREE.Vector3();
     totalForce.add(Lift).sub(Drag).add(Side).add(Weight);
 
+    const Thrust = forward.clone().multiplyScalar(this.thrust);
+    totalForce.add(Thrust);
+
     // --- LINEAR ACCELERATION ---
     const accel = totalForce.clone().multiplyScalar(1/this.mass);
     this.velocity.addScaledVector(accel, dt);
