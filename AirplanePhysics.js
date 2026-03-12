@@ -125,11 +125,16 @@ export class Aircraft {
     // --- BODY AXES ---
     const forward = new THREE.Vector3(0,0,-1).applyQuaternion(q);
     const right   = new THREE.Vector3(1,0,0).applyQuaternion(q);
-    const up      = new THREE.Vector3(0,1,0);
+    const up      = new THREE.Vector3(0,1,0).applyQuaternion(q);
 
     // --- ANGLES OF ATTACK AND SIDESLIP ---
-    const alpha = Math.atan2(this.velocity.y, Math.sqrt(this.velocity.x*this.velocity.x + this.velocity.z*this.velocity.z));
-    const beta  = Math.asin(THREE.MathUtils.clamp(this.velocity.x/speed, -1,1));
+    const bodyVel = this.velocity.clone().applyQuaternion(q.clone().invert());
+  
+    const u = -bodyVel.z; // forward
+    const v = bodyVel.x;  // right
+    const w = bodyVel.y;  // up
+    const alpha = Math.atan2(w, u);
+    const beta  = Math.asin(THREE.MathUtils.clamp(v / speed, -1,1));
 
     // --- DYNAMIC PRESSURE ---
     const qdyn = 0.5 * this.airDensity * speed * speed;
@@ -141,18 +146,17 @@ export class Aircraft {
 
     // --- LIFT DIRECTION ---
     // Blend between velocity-perpendicular and world-up for stability
-    const spanDir = right.clone();
-    let liftDirVel = new THREE.Vector3().crossVectors(velDir, spanDir).cross(velDir).normalize();
-    const speedThreshold = 10; // m/s
-    const factor = Math.min(speed / speedThreshold, 1);
-    const liftDir = liftDirVel.clone().multiplyScalar(factor)
-                     .add(up.clone().multiplyScalar(1 - factor))
-                     .normalize();
+    const liftDir = new THREE.Vector3(0,1,0).applyQuaternion(q);
 
     // --- FORCES ---
     const Lift  = liftDir.clone().multiplyScalar(qdyn * this.wingArea * Cl);
     const Drag  = velDir.clone().multiplyScalar(qdyn * this.wingArea * Cd);
-    const Side  = right.clone().multiplyScalar(qdyn * this.wingArea * Cy);
+    const windRight = new THREE.Vector3().crossVectors(
+      velDir,
+      new THREE.Vector3(0,1,0)
+    ).normalize();
+
+    const Side = windRight.multiplyScalar(qdyn * this.wingArea * Cy);
     const Weight = new THREE.Vector3(0, -this.findWeight(), 0);
 
     const totalForce = new THREE.Vector3();
@@ -170,7 +174,7 @@ export class Aircraft {
     const b = this.wingspan, c = this.wingArea / this.wingspan;
 
     // Stability derivatives
-    const Cl_beta = -0.12, Cl_p = -0.6, Cl_da = 0.25;
+    const Cl_beta = -0.25, Cl_p = -0.6, Cl_da = 0.25;
     const Cm_alpha = -1.5, Cm_q = -12, Cm_de = -1.5;
     const Cn_beta = -0.25, Cn_r = -0.35, Cn_dr = 0.15;
 
@@ -215,7 +219,6 @@ export class Aircraft {
 
     // --- POSITION UPDATE ---
     this.plane.position.addScaledVector(this.velocity, dt);
-    this.velocity.multiplyScalar(0.998); // reduce numerical drift
 
     // --- GROUND COLLISION ---
     if(this.plane.position.y <= elevation) {
