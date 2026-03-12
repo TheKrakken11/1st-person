@@ -229,7 +229,7 @@ function animate() {
 function updateControls(aircraft) {
   if (pointerLocked) {
     const sensitivity = 0.02; // adjust to your preference
-    aircraft.setPitchInput(mouseDeltaX * sensitivity);
+    aircraft.setPitchInput(-mouseDeltaX * sensitivity);
     aircraft.setRollInput(-mouseDeltaY * sensitivity); // invert Y axis
     console.log("Mouse X movement:  ", mouseDeltaX, "Mouse Y movement:  ", mouseDeltaY);
     // Reset deltas after use
