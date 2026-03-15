@@ -9,6 +9,7 @@ let trees = [];
 let pointerLocked = false;
 let mouseDeltaX = 0;
 let mouseDeltaY = 0;
+let keys = {};
 let rudderInput = 0;
 let touchActive = false;
 let lastTouchX = 0;
@@ -167,13 +168,13 @@ async function init3d() {
       mouseDeltaY += event.movementY;
     }
   });
-
+  
   document.addEventListener('keydown', (event) => {
-    if (event.code === 'KeyQ') {
-      rudderInput = -1;
-    } else if (event.code === 'KeyE') {
-      rudderInput = 1;
-    }
+    keys[event.code] = true;
+  });
+
+  document.addEventListener('keyup', (event) => {
+    keys[event.code] = false;
   });
 
   canvas.addEventListener("touchstart", (e) => {
@@ -267,6 +268,13 @@ function updateControls(aircraft) {
     const sensitivity = 0.02; // adjust to your preference
     aircraft.setYawInput(-mouseDeltaX * sensitivity);
     aircraft.setRollInput(-mouseDeltaY * sensitivity); // invert Y axis
+    if (keys['KeyQ']) {
+      rudderInput = 0.5;
+    } else if (keys['KeyE']) {
+      rudderInput = -0.5;
+    } else {
+      rudderInput = 0;
+    }
     aircraft.setPitchInput(rudderInput);
     console.log("Mouse X movement:  ", mouseDeltaX, "Mouse Y movement:  ", mouseDeltaY);
     // Reset deltas after use
