@@ -188,7 +188,7 @@ export class Aircraft {
   ).multiplyScalar(dt);
 
   const dq = new THREE.Quaternion().setFromEuler(
-    new THREE.Euler(rot.y, rot.x, rot.z, "YXZ")
+    new THREE.Euler(rot.x, rot.y, rot.z, "XYZ")
   );
 
   this.plane.quaternion.multiply(dq).normalize();
