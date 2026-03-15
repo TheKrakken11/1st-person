@@ -181,12 +181,12 @@ export class Aircraft {
   this.angularVelocity.lerp(omega, dt * 2);
 
   // --- QUATERNION UPDATE ---
-  const omega = this.angularVelocity.clone();
-  const angle = omega.length() * dt;
+  const omega0 = this.angularVelocity.clone();
+  const angle = omega0.length() * dt;
 
   if (angle > 0) {
 
-    const axis = omega.normalize();
+    const axis = omega0.normalize();
 
     const dq = new THREE.Quaternion()
       .setFromAxisAngle(axis, angle);
