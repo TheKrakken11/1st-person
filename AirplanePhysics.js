@@ -181,29 +181,40 @@ export class Aircraft {
   this.angularVelocity.lerp(omega, dt * 2);
 
   // --- QUATERNION UPDATE (separate body-axis rotations) ---
-  const dtRoll  = (this.rollInput * 1.8 - right.y * 2.0) * dt;  // include autoRoll
-  const dtPitch = this.pitchInput * 1.2 * dt;
-  const dtYaw   = this.yawInput * 0.8 * dt;
+  const rollSpeed = 1.8;
+  const pitchSpeed = 1.2;
+  const yawSpeed = 0.8;
 
-  // Roll around local X
-  if (Math.abs(dtRoll) > 0) {
-    const dqRoll = new THREE.Quaternion();
-    dqRoll.setFromAxisAngle(new THREE.Vector3(1,0,0), dtRoll);
-    this.plane.quaternion.multiply(dqRoll).normalize();
+  // Local axes
+  const localRight   = new THREE.Vector3(1,0,0).applyQuaternion(this.plane.quaternion);
+  const localUp      = new THREE.Vector3(0,1,0).applyQuaternion(this.plane.quaternion);
+  const localForward = new THREE.Vector3(0,0,-1).applyQuaternion(this.plane.quaternion);
+
+  // Auto-roll correction
+  const rollError = localRight.y;
+  const autoRoll = -rollError * 2.0;
+
+  // Compute per-frame rotation
+  const dtRoll  = (this.rollInput * rollSpeed + autoRoll) * dt;
+  const dtPitch = this.pitchInput * pitchSpeed * dt;
+  const dtYaw   = this.yawInput * yawSpeed * dt;
+
+  // Apply roll
+  if (dtRoll !== 0) {
+    const dq = new THREE.Quaternion().setFromAxisAngle(localRight, dtRoll);
+    this.plane.quaternion.multiply(dq).normalize();
   }
 
-  // Pitch around local Y
-  if (Math.abs(dtPitch) > 0) {
-    const dqPitch = new THREE.Quaternion();
-    dqPitch.setFromAxisAngle(new THREE.Vector3(0,1,0), dtPitch);
-    this.plane.quaternion.multiply(dqPitch).normalize();
+  // Apply pitch
+  if (dtPitch !== 0) {
+    const dq = new THREE.Quaternion().setFromAxisAngle(localUp, dtPitch);
+    this.plane.quaternion.multiply(dq).normalize();
   }
 
-  // Yaw around local Z
-  if (Math.abs(dtYaw) > 0) {
-    const dqYaw = new THREE.Quaternion();
-    dqYaw.setFromAxisAngle(new THREE.Vector3(0,0,1), dtYaw);
-    this.plane.quaternion.multiply(dqYaw).normalize();
+  // Apply yaw
+  if (dtYaw !== 0) {
+    const dq = new THREE.Quaternion().setFromAxisAngle(localForward, dtYaw);
+    this.plane.quaternion.multiply(dq).normalize();
   }
 
   // --- POSITION ---
