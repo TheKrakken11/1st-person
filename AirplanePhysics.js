@@ -181,21 +181,17 @@ export class Aircraft {
   this.angularVelocity.lerp(omega, dt * 2);
 
   // --- QUATERNION UPDATE ---
-  const omegaQuat = new THREE.Quaternion(
+  const rot = new THREE.Vector3(
     this.angularVelocity.x,
     this.angularVelocity.y,
-    this.angularVelocity.z,
-    0
+    this.angularVelocity.z
+  ).multiplyScalar(dt);
+
+  const dq = new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(rot.y, rot.x, rot.z, "YXZ")
   );
 
-  const qdot = q.clone().multiply(omegaQuat);
-
-  q.x += 0.5 * qdot.x * dt;
-  q.y += 0.5 * qdot.y * dt;
-  q.z += 0.5 * qdot.z * dt;
-  q.w += 0.5 * qdot.w * dt;
-
-  q.normalize();
+  this.plane.quaternion.multiply(dq).normalize();
 
   // --- POSITION ---
   this.plane.position.addScaledVector(this.velocity, dt);
