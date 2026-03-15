@@ -162,37 +162,14 @@ export class Aircraft {
   const newSpeed = this.velocity.length();
   this.velocity.clampLength(0, 250);
 
-  // --- ROTATION CONTROL (STABLE MODEL) ---
-  const rollRate  = this.rollInput  * 1.8;
-  const pitchRate = this.pitchInput * 1.2;
-  const yawRate   = this.yawInput   * 0.8;
+  // --- SIMPLE LOCAL-AXIS ROTATION UPDATE ---
+  // Reuse axes you already computed:
+  const autoRoll = -right.y * 2.0; // self-leveling
 
-  // self-leveling roll stability
-  const rollError = right.y;
-  const autoRoll = -rollError * 2.0;
-
-  const omega = new THREE.Vector3(
-      rollRate + autoRoll,
-      pitchRate,
-      yawRate
-  );
-
-  // smooth angular motion
-  this.angularVelocity.lerp(omega, dt * 2);
-
-  // --- QUATERNION UPDATE ---
-  const omega0 = this.angularVelocity.clone();
-  const angle = omega0.length() * dt;
-
-  if (angle > 0) {
-
-    const axis = omega0.normalize();
-
-    const dq = new THREE.Quaternion()
-      .setFromAxisAngle(axis, angle);
-
-    this.plane.quaternion.multiply(dq).normalize();
-  }
+  // Apply rotations along local axes
+  this.plane.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(right, (this.rollInput * 1.8 + autoRoll) * dt)).normalize();
+  this.plane.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(up, this.pitchInput * 1.2 * dt)).normalize();
+  this.plane.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(forward, this.yawInput * 0.8 * dt)).normalize();
 
   // --- POSITION ---
   this.plane.position.addScaledVector(this.velocity, dt);
