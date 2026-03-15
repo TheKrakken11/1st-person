@@ -141,14 +141,7 @@ export class Aircraft {
   const drag = qdyn * this.wingArea * Cd;
 
   // --- FORCES ---
-  const forwardvel = this.velocity.clone().normalize();
-
-  const liftDir = forwardvel.clone()
-    .cross(right)
-    .normalize()
-    .cross(forwardvel)
-    .normalize();
-  const Lift = liftDir.multiplyScalar(lift);
+  const Lift = up.clone().multiplyScalar(lift);
   const Drag = velDir.clone().multiplyScalar(-drag);
   const Thrust = forward.clone().multiplyScalar(this.thrust);
   const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
