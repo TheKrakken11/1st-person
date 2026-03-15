@@ -141,13 +141,13 @@ export class Aircraft {
   const drag = qdyn * this.wingArea * Cd;
 
   // --- FORCES ---
-  const forward = this.velocity.clone().normalize();
+  const forwardvel = this.velocity.clone().normalize();
   const right = new THREE.Vector3(1,0,0).applyQuaternion(this.plane.quaternion);
 
-  const liftDir = forward.clone()
+  const liftDir = forwardvel.clone()
     .cross(right)
     .normalize()
-    .cross(forward)
+    .cross(forwardvel)
     .normalize();
   const Lift = liftDir.multiplyScalar(lift);
   const Drag = velDir.clone().multiplyScalar(-drag);
