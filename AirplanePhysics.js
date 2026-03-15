@@ -168,6 +168,7 @@ export class Aircraft {
   const yawRate   = this.yawInput   * 0.8;
 
   // self-leveling roll stability
+  const rollError = right.y;
   const autoRoll = -rollError * 2.0;
 
   const omega = new THREE.Vector3(
@@ -179,40 +180,17 @@ export class Aircraft {
   // smooth angular motion
   this.angularVelocity.lerp(omega, dt * 2);
 
-  // --- QUATERNION UPDATE (separate body-axis rotations) ---
-  const rollSpeed = 1.8;
-  const pitchSpeed = 1.2;
-  const yawSpeed = 0.8;
+  // --- QUATERNION UPDATE ---
+  const omega0 = this.angularVelocity.clone();
+  const angle = omega0.length() * dt;
 
-  // Local axes
-  const localRight   = new THREE.Vector3(1,0,0).applyQuaternion(this.plane.quaternion);
-  const localUp      = new THREE.Vector3(0,1,0).applyQuaternion(this.plane.quaternion);
-  const localForward = new THREE.Vector3(0,0,-1).applyQuaternion(this.plane.quaternion);
+  if (angle > 0) {
 
-  // Auto-roll correction
-  const rollError = localRight.y;
-  const autoRoll = -rollError * 2.0;
+    const axis = omega0.normalize();
 
-  // Compute per-frame rotation
-  const dtRoll  = (this.rollInput * rollSpeed + autoRoll) * dt;
-  const dtPitch = this.pitchInput * pitchSpeed * dt;
-  const dtYaw   = this.yawInput * yawSpeed * dt;
+    const dq = new THREE.Quaternion()
+      .setFromAxisAngle(axis, angle);
 
-  // Apply roll
-  if (dtRoll !== 0) {
-    const dq = new THREE.Quaternion().setFromAxisAngle(localRight, dtRoll);
-    this.plane.quaternion.multiply(dq).normalize();
-  }
-
-  // Apply pitch
-  if (dtPitch !== 0) {
-    const dq = new THREE.Quaternion().setFromAxisAngle(localUp, dtPitch);
-    this.plane.quaternion.multiply(dq).normalize();
-  }
-
-  // Apply yaw
-  if (dtYaw !== 0) {
-    const dq = new THREE.Quaternion().setFromAxisAngle(localForward, dtYaw);
     this.plane.quaternion.multiply(dq).normalize();
   }
 
