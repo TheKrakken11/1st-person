@@ -166,10 +166,16 @@ export class Aircraft {
   // Reuse axes you already computed:
   const autoRoll = -right.y * 2.0; // self-leveling
 
-  // Apply rotations along local axes
-  this.plane.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(right, (this.rollInput * 1.8 + autoRoll) * dt)).normalize();
-  this.plane.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(up, this.pitchInput * 1.2 * dt)).normalize();
-  this.plane.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(forward, this.yawInput * 0.8 * dt)).normalize();
+  // 1. Compute rotation quaternions for each control
+  const qRoll  = new THREE.Quaternion().setFromAxisAngle(forward, this.rollInput * 1.8 * dt + autoRoll * dt);
+  const qPitch = new THREE.Quaternion().setFromAxisAngle(right, this.pitchInput * 1.2 * dt);
+  const qYaw   = new THREE.Quaternion().setFromAxisAngle(up, this.yawInput * 0.8 * dt);
+
+  // 2. Apply them in **yaw → pitch → roll** order
+  this.plane.quaternion.multiply(qYaw);
+  this.plane.quaternion.multiply(qPitch);
+  this.plane.quaternion.multiply(qRoll);
+  this.plane.quaternion.normalize();
 
   // --- POSITION ---
   this.plane.position.addScaledVector(this.velocity, dt);
