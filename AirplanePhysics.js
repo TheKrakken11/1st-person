@@ -180,18 +180,30 @@ export class Aircraft {
   // smooth angular motion
   this.angularVelocity.lerp(omega, dt * 2);
 
-  // --- QUATERNION UPDATE ---
-  const omega0 = this.angularVelocity.clone();
-  const angle = omega0.length() * dt;
+  // --- QUATERNION UPDATE (separate body-axis rotations) ---
+  const dtRoll  = (this.rollInput * 1.8 - right.y * 2.0) * dt;  // include autoRoll
+  const dtPitch = this.pitchInput * 1.2 * dt;
+  const dtYaw   = this.yawInput * 0.8 * dt;
 
-  if (angle > 0) {
+  // Roll around local X
+  if (Math.abs(dtRoll) > 0) {
+    const dqRoll = new THREE.Quaternion();
+    dqRoll.setFromAxisAngle(new THREE.Vector3(1,0,0), dtRoll);
+    this.plane.quaternion.multiply(dqRoll).normalize();
+  }
 
-    const axis = omega0.normalize();
+  // Pitch around local Y
+  if (Math.abs(dtPitch) > 0) {
+    const dqPitch = new THREE.Quaternion();
+    dqPitch.setFromAxisAngle(new THREE.Vector3(0,1,0), dtPitch);
+    this.plane.quaternion.multiply(dqPitch).normalize();
+  }
 
-    const dq = new THREE.Quaternion()
-      .setFromAxisAngle(axis, angle);
-
-    this.plane.quaternion.multiply(dq).normalize();
+  // Yaw around local Z
+  if (Math.abs(dtYaw) > 0) {
+    const dqYaw = new THREE.Quaternion();
+    dqYaw.setFromAxisAngle(new THREE.Vector3(0,0,1), dtYaw);
+    this.plane.quaternion.multiply(dqYaw).normalize();
   }
 
   // --- POSITION ---
