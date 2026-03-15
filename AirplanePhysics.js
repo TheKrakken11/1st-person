@@ -163,19 +163,28 @@ export class Aircraft {
   this.velocity.clampLength(0, 250);
 
   // --- SIMPLE LOCAL-AXIS ROTATION UPDATE ---
-  // Reuse axes you already computed:
-  const autoRoll = -right.y * 2.0; // self-leveling
+  // rotation speeds
+  const rollSpeed = 1.8;
+  const pitchSpeed = 1.2;
+  const yawSpeed = 0.8;
 
-  // 1. Compute rotation quaternions for each control
-  const qRoll  = new THREE.Quaternion().setFromAxisAngle(forward, this.rollInput * 1.8 * dt + autoRoll * dt);
-  const qPitch = new THREE.Quaternion().setFromAxisAngle(right, this.pitchInput * 1.2 * dt);
-  const qYaw   = new THREE.Quaternion().setFromAxisAngle(up, this.yawInput * 0.8 * dt);
+  // auto-level roll
+  const upWorld = new THREE.Vector3(0,1,0).applyQuaternion(q); 
+  const rightWorld = new THREE.Vector3(1,0,0).applyQuaternion(q);
+  const forwardWorld = new THREE.Vector3(0,0,-1).applyQuaternion(q);
 
-  // 2. Apply them in **yaw → pitch → roll** order
-  this.plane.quaternion.multiply(qYaw);
-  this.plane.quaternion.multiply(qPitch);
-  this.plane.quaternion.multiply(qRoll);
-  this.plane.quaternion.normalize();
+  const autoRoll = -rightWorld.y * 2.0; // self-leveling
+
+  // compute **body-local rotation quaternions**
+  const qRoll  = new THREE.Quaternion().setFromAxisAngle(forward, (this.rollInput * rollSpeed + autoRoll) * dt); // roll around nose
+  const qPitch = new THREE.Quaternion().setFromAxisAngle(right, this.pitchInput * pitchSpeed * dt); // pitch around local right
+  const qYaw   = new THREE.Quaternion().setFromAxisAngle(up, this.yawInput * yawSpeed * dt); // yaw around up
+
+  // apply in **roll → pitch → yaw** order for stable local axes
+  q.multiply(qRoll);
+  q.multiply(qPitch);
+  q.multiply(qYaw);
+  q.normalize();
 
   // --- POSITION ---
   this.plane.position.addScaledVector(this.velocity, dt);
