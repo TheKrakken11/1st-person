@@ -142,7 +142,6 @@ export class Aircraft {
 
   // --- FORCES ---
   const forwardvel = this.velocity.clone().normalize();
-  const right = new THREE.Vector3(1,0,0).applyQuaternion(this.plane.quaternion);
 
   const liftDir = forwardvel.clone()
     .cross(right)
