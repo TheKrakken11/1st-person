@@ -168,7 +168,6 @@ export class Aircraft {
   const yawRate   = this.yawInput   * 0.8;
 
   // self-leveling roll stability
-  const rollError = right.y;
   const autoRoll = -rollError * 2.0;
 
   const omega = new THREE.Vector3(
