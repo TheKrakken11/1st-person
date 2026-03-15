@@ -266,8 +266,8 @@ function animate() {
 function updateControls(aircraft) {
   if (pointerLocked || touchActive) {
     const sensitivity = 0.02; // adjust to your preference
-    aircraft.setPitchInput(-mouseDeltaX * sensitivity);
-    aircraft.setRollInput(-mouseDeltaY * sensitivity); // invert Y axis
+    aircraft.setYawInput(-mouseDeltaX * sensitivity);
+    aircraft.setPitchInput(-mouseDeltaY * sensitivity); // invert Y axis
     if (keys['KeyQ']) {
       rudderInput = 0.5;
     } else if (keys['KeyE']) {
@@ -275,7 +275,7 @@ function updateControls(aircraft) {
     } else {
       rudderInput = 0;
     }
-    aircraft.setYawInput(rudderInput);
+    aircraft.setRollInput(rudderInput);
     console.log("Mouse X movement:  ", mouseDeltaX, "Mouse Y movement:  ", mouseDeltaY);
     // Reset deltas after use
     mouseDeltaX = 0;
