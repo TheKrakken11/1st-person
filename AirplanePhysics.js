@@ -163,13 +163,7 @@ export class Aircraft {
   const Cy_beta = -1.2;  // side force coefficient
   const sideForce = qdyn * this.wingArea * Cy_beta * beta;
 
-  const flow = velDir.clone().multiplyScalar(-1);
-
-  const forwardDir = velDir.clone();
-  const rightDir = new THREE.Vector3().crossVectors(up, forwardDir).normalize();
-  const sideDir = rightDir;  // now strictly right in body frame
-
-  const Side = sideDir.clone().multiplyScalar(sideForce);
+  const Side = right.clone().multiplyScalar(sideForce);
   const yawDamping = -this.angularVelocity.z * 1.5;
   this.angularVelocity.z += yawDamping * dt;
 
