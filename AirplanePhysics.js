@@ -157,15 +157,21 @@ export class Aircraft {
   const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
 
   // --- SIDESLIP ---
-  const velBody = velDir.clone().applyQuaternion(q.clone().invert());
+  // Compute sideslip
+  const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
   const beta = Math.atan2(velBody.x, -velBody.z);
 
-  const Cy_beta = -1.2;  // side force coefficient
+  // Side force (lateral)
+  const Cy_beta = -0.8; // slightly weaker
   const sideForce = qdyn * this.wingArea * Cy_beta * beta;
-
   const Side = right.clone().multiplyScalar(sideForce);
-  const yawDamping = -this.angularVelocity.z * 1.5;
-  this.angularVelocity.z += yawDamping * dt;
+
+  // --- YAW CORRECTION (stabilizer) ---
+  const yawStabGain = 1.5; // proportional gain
+  const yawCorrection = -beta * yawStabGain;
+
+  // Combine with existing yaw input/damping
+  this.angularVelocity.z += (yawCorrection + this.yawInput - this.angularVelocity.z * 1.5) * dt;
 
   // --- TOTAL FORCES ---
   const totalForce = new THREE.Vector3()
