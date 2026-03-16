@@ -159,9 +159,10 @@ export class Aircraft {
   // natural drag stabilization
   this.velocity.multiplyScalar(0.999);
 
-  this.velocity.clampLength(0, 10000);
+  const newSpeed = this.velocity.length();
+  this.velocity.clampLength(0, 250);
 
-  // --- ROTATION CONTROL ---
+  // --- ROTATION CONTROL (STABLE MODEL) ---
   const rollRate  = this.rollInput  * 1.8;
   const pitchRate = this.pitchInput * 1.2;
   const yawRate   = this.yawInput   * 0.8;
@@ -176,22 +177,22 @@ export class Aircraft {
       yawRate
   );
 
+  // smooth angular motion
   this.angularVelocity.lerp(omega, dt * 2);
 
-  // --- FOOLPROOF BODY-AXIS ROTATION ---
-  const rollAngle  = this.angularVelocity.x * dt;
-  const pitchAngle = this.angularVelocity.y * dt;
-  const yawAngle   = this.angularVelocity.z * dt;
+  // --- QUATERNION UPDATE ---
+  const omega0 = this.angularVelocity.clone();
+  const angle = omega0.length() * dt;
 
-  const qRoll  = new THREE.Quaternion().setFromAxisAngle(forward, rollAngle);
-  const qPitch = new THREE.Quaternion().setFromAxisAngle(right, pitchAngle);
-  const qYaw   = new THREE.Quaternion().setFromAxisAngle(up, yawAngle);
+  if (angle > 0) {
 
-  this.plane.quaternion
-    .multiply(qRoll)
-    .multiply(qPitch)
-    .multiply(qYaw)
-    .normalize();
+    const axis = omega0.normalize();
+
+    const dq = new THREE.Quaternion()
+      .setFromAxisAngle(axis, angle);
+
+    this.plane.quaternion.multiply(dq).normalize();
+  }
 
   // --- POSITION ---
   this.plane.position.addScaledVector(this.velocity, dt);
