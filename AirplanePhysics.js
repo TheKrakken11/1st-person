@@ -165,8 +165,8 @@ export class Aircraft {
 
   const flow = velDir.clone().multiplyScalar(-1);
 
-  const sideDir = liftDir.clone()
-    .cross(flow)
+  const sideDir = flow.clone()
+    .cross(liftDir)
     .normalize();
 
   const Side = sideDir.clone().multiplyScalar(sideForce);
@@ -198,7 +198,7 @@ export class Aircraft {
 
   // self-leveling roll stability
   const rollError = right.y;
-  const autoRoll = -rollError * 2.0;
+  const autoRoll = -rollError * 0.5;
 
   const omega = new THREE.Vector3(
       rollRate + autoRoll,
@@ -206,8 +206,6 @@ export class Aircraft {
       yawRate
   );
 
-  // smooth angular motion
-  this.angularVelocity.lerp(omega, dt * 2);
 
   // --- QUATERNION UPDATE ---
   const omega0 = this.angularVelocity.clone();
