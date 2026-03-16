@@ -141,11 +141,14 @@ export class Aircraft {
   const drag = qdyn * this.wingArea * Cd;
 
   // --- FORCES ---
-  const liftDir = velDir.clone()
-    .cross(right)      // airflow × wing axis
-    .cross(velDir)     // ensure perpendicular to airflow
-    .normalize();
+  const span = right.clone().normalize();       // wing span axis
+  const flow = velDir.clone().multiplyScalar(-1); // airflow (opposite velocity)
 
+  // Lift direction
+  const liftDir = span.clone()
+    .cross(flow)
+    .cross(flow)
+    .normalize();
   const Lift = liftDir.multiplyScalar(lift);
   const Drag = velDir.clone().multiplyScalar(-drag);
   const Thrust = forward.clone().multiplyScalar(this.thrust);
