@@ -151,7 +151,7 @@ export class Aircraft {
     .addScaledVector(velDir, -up.dot(velDir))
     .normalize();
 
-  const Lift = liftDir.multiplyScalar(lift);
+  const Lift = liftDir.clone().multiplyScalar(lift);
   const Drag = velDir.clone().multiplyScalar(-drag);
   const Thrust = forward.clone().multiplyScalar(this.thrust);
   const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
@@ -169,7 +169,7 @@ export class Aircraft {
     .cross(liftDir)
     .normalize();
 
-  const Side = sideDir.multiplyScalar(sideForce);
+  const Side = sideDir.clone().multiplyScalar(sideForce);
   const yawDamping = -this.angularVelocity.z * 1.5;
   this.angularVelocity.z += yawDamping * dt;
 
