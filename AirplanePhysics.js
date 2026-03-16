@@ -186,11 +186,14 @@ export class Aircraft {
 
   if (angle > 0) {
 
-    const axis = omega0.normalize();
+    const axisBody = omega0.clone().normalize();
+
+    // convert body axis → world axis
+    const axisWorld = axisBody.applyQuaternion(this.plane.quaternion);
 
     const dq = new THREE.Quaternion()
-      .setFromAxisAngle(axis, angle);
-
+      .setFromAxisAngle(axisWorld, angle);
+    
     this.plane.quaternion.multiply(dq).normalize();
   }
 
