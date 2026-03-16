@@ -133,6 +133,12 @@ export class Aircraft {
   const bodyVel = this.velocity.clone().applyQuaternion(q.clone().invert());
   const alpha = Math.atan2(-bodyVel.y, -bodyVel.z);
 
+  // --- PITCH STABILITY ---
+  const pitchStability = -alpha * 3.0;
+  const pitchDamping = -this.angularVelocity.y * 0.8;
+  
+  this.angularVelocity.y += (pitchStability + pitchDamping) * dt;
+  
   // --- AERODYNAMICS ---
   const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha));
   const Cd = this.findCd(Cl);
