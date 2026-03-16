@@ -165,8 +165,8 @@ export class Aircraft {
 
   const flow = velDir.clone().multiplyScalar(-1);
 
-  const sideDir = flow.clone()
-    .cross(liftDir)
+  const sideDir = liftDir.clone()
+    .cross(flow)
     .normalize();
 
   const Side = sideDir.clone().multiplyScalar(sideForce);
