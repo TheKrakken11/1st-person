@@ -134,9 +134,12 @@ export class Aircraft {
   const alpha = Math.atan2(-bodyVel.y, -bodyVel.z);
 
   // --- PITCH STABILITY ---
-  const pitchStability = -alpha * 3.0;
-  const pitchDamping = -this.angularVelocity.y * 0.8;
-  
+  const pitchGain = 0.5;   // instead of 3.0
+  const pitchDampingGain = 0.8;
+
+  const pitchStability = -alpha * pitchGain;
+  const pitchDamping = -this.angularVelocity.y * pitchDampingGain;
+
   this.angularVelocity.y += (pitchStability + pitchDamping) * dt;
   
   // --- AERODYNAMICS ---
