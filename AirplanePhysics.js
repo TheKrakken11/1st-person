@@ -165,8 +165,8 @@ export class Aircraft {
 
   const flow = velDir.clone().multiplyScalar(-1);
 
-  const sideDir = flow.clone()
-    .cross(liftDir)
+  const sideDir = liftDir.clone()
+    .cross(flow)
     .normalize();
 
   const Side = sideDir.clone().multiplyScalar(sideForce);
@@ -205,6 +205,10 @@ export class Aircraft {
       pitchRate,
       yawRate
   );
+
+  this.angularVelocity.x += (rollRate + autoRoll - this.angularVelocity.x * 1.2) * dt;
+  this.angularVelocity.y += (pitchRate - this.angularVelocity.y * 0.8) * dt;
+  this.angularVelocity.z += (yawRate - this.angularVelocity.z * 1.5) * dt;
 
 
   // --- QUATERNION UPDATE ---
