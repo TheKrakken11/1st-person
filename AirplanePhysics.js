@@ -165,9 +165,9 @@ export class Aircraft {
 
   const flow = velDir.clone().multiplyScalar(-1);
 
-  const sideDir = liftDir.clone()
-    .cross(flow)
-    .normalize();
+  const forwardDir = velDir.clone();
+  const rightDir = new THREE.Vector3().crossVectors(up, forwardDir).normalize();
+  const sideDir = rightDir;  // now strictly right in body frame
 
   const Side = sideDir.clone().multiplyScalar(sideForce);
   const yawDamping = -this.angularVelocity.z * 1.5;
