@@ -138,6 +138,16 @@ export class Aircraft {
   const pitchDamping = -this.angularVelocity.y * 0.8;
   
   this.angularVelocity.y += (pitchStability + pitchDamping) * dt;
+
+  // --- SIDESLIP ---
+  const beta = Math.atan2(bodyVel.x, -bodyVel.z);
+
+  const Cy_beta = -1.2;  // side force coefficient
+  const sideForce = qdyn * this.wingArea * Cy_beta * beta;
+
+  const Side = right.clone().multiplyScalar(sideForce);
+  const yawDamping = -this.angularVelocity.z * 1.5;
+  this.angularVelocity.z += yawDamping * dt;
   
   // --- AERODYNAMICS ---
   const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha));
@@ -160,7 +170,8 @@ export class Aircraft {
       .add(Lift)
       .add(Drag)
       .add(Thrust)
-      .add(Weight);
+      .add(Weight)
+      .add(Side);
 
   // --- VELOCITY ---
   const accel = totalForce.multiplyScalar(1/this.mass);
