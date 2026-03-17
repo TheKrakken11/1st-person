@@ -158,10 +158,14 @@ export class Aircraft {
 
   // Apply side force along body right vector transformed to world frame
   const Side = right.clone().multiplyScalar(sideForce);
-  
-  // --- YAW DAMPING ---
+
+  // --- YAW DAMPING + AUTO YAW CORRECTION ---
   const yawDamping = -this.angularVelocity.z * 1.5;
-  this.angularVelocity.z += yawDamping * dt;
+
+  // Automatic yaw to counter residual sideslip
+  const autoYaw = -beta * 0.5;  // small stabilizing correction
+
+  this.angularVelocity.z += (yawDamping + autoYaw) * dt;
 
   // --- TOTAL FORCES ---
   const totalForce = new THREE.Vector3()
