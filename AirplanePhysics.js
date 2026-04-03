@@ -137,10 +137,15 @@ export class Aircraft {
   const forwardSpeed = Math.max(-velBody.z, 5);
   const beta = Math.atan2(-velBody.x, forwardSpeed);
 
-  // --- PITCH STABILITY ---
-  const pitchStability = -alpha * 3.0;
-  const pitchDamping = -this.angularVelocity.y * 0.8;
-  this.angularVelocity.y += (pitchStability + pitchDamping) * dt;
+  // --- PITCH STABILITY (FIXED: moment-based) ---
+  const Cm_alpha = -1.2;   // pitch stability (negative = stable)
+  const Cm_q = -8.0;       // pitch damping (VERY important)
+
+  const pitchMoment =
+    qdyn * this.wingArea * this.wingspan *
+    (Cm_alpha * alpha + Cm_q * this.angularVelocity.y);
+
+  this.angularVelocity.y += (pitchMoment / this.I.y) * dt;
 
   // --- AERODYNAMICS ---
   const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha));
