@@ -115,65 +115,59 @@ export class Aircraft {
   update(dt, elevation) {
   const q = this.plane.quaternion;
 
-  // --- Body axes ---
+  // BODY AXES
   const forward = new THREE.Vector3(0,0,-1).applyQuaternion(q);
   const right   = new THREE.Vector3(1,0,0).applyQuaternion(q);
   const up      = new THREE.Vector3(0,1,0).applyQuaternion(q);
 
-  // --- Airspeed & dynamic pressure ---
   const speed = Math.max(this.velocity.length(), 0.1);
   const velDir = this.velocity.clone().normalize();
+
+  // --- AIR DENSITY ---
   this.airDensity = this.findRho();
   const qdyn = 0.5 * this.airDensity * speed * speed;
 
-  // --- Body-frame velocity ---
+  // --- BODY VELOCITY ---
   const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
 
-  // --- Angles ---
-  const alpha = Math.atan2(-velBody.y, -velBody.z); // AoA
-  const beta = THREE.MathUtils.clamp(Math.atan2(-velBody.x, Math.max(-velBody.z, 0.1)), -0.5, 0.5);
+  // --- ANGLES ---
+  const alpha = Math.atan2(-velBody.y, -velBody.z);            // angle of attack
+  const beta  = THREE.MathUtils.clamp(Math.atan2(velBody.x, -velBody.z), -0.5, 0.5); // sideslip
 
-  // --- Normalized rotational rates ---
-  const p = this.angularVelocity.x * this.wingspan / (2 * speed);
-  const qRate = this.angularVelocity.y * this.wingspan / (2 * speed);
-  const r = this.angularVelocity.z * this.wingspan / (2 * speed);
+  // --- NORMALIZED RATES (for stability derivatives) ---
+  const p = this.angularVelocity.x * this.wingspan / (2 * speed); // roll rate
+  const qRate = this.angularVelocity.y * this.wingspan / (2 * speed); // pitch rate
+  const r = this.angularVelocity.z * this.wingspan / (2 * speed); // yaw rate
 
-  // -------------------------
-  // LONGITUDINAL (PITCH) STABILITY
-  // -------------------------
-  const desiredAoA = 5 * Math.PI / 180; // trim AoA ~5 degrees
-  const aoaError = alpha - desiredAoA;
+  // =============================
+  // AERODYNAMIC COEFFICIENTS
+  // =============================
+  const Cm_alpha = -0.5;   // longitudinal static stability
+  const Cm_q     = -5.0;   // pitch damping
 
-  const Cm_alpha = -0.5;   // stabilizing pitch derivative
-  const Cm_q = -10.0;      // pitch damping
-  const Cm_control = 0.8;  // pitch control authority
+  const Cn_beta  = 0.1;    // directional stability
+  const Cn_r     = -4.0;   // yaw damping
 
-  const pitchMoment =
-      qdyn * this.wingArea * this.wingspan *
-      (Cm_alpha * aoaError + Cm_q * qRate + Cm_control * this.pitchInput);
+  const Cl_beta  = -0.05;  // dihedral effect
+  const Cl_p     = -1.2;   // roll damping
 
-  this.angularVelocity.y += (pitchMoment / this.I.y) * dt;
+  const Cy_beta  = -0.5;   // side force coefficient
 
-  // -------------------------
-  // LATERAL-DIRECTIONAL (ROLL/YAW)
-  // -------------------------
-  const Cl_beta = -0.1;
-  const Cl_p    = -1.0;
-  const Cl_control = 0.5;
+  // =============================
+  // MOMENTS (body-axis torques)
+  // =============================
+  const pitchMoment = qdyn * this.wingArea * this.wingspan * (Cm_alpha * alpha + Cm_q * qRate);
+  const yawMoment   = qdyn * this.wingArea * this.wingspan * (Cn_beta * beta + Cn_r * r);
+  const rollMoment  = qdyn * this.wingArea * this.wingspan * (Cl_beta * beta + Cl_p * p);
 
-  const Cn_beta = 0.05;
-  const Cn_r    = -5.0;
-  const Cn_control = 0.3;
-
-  const rollMoment = qdyn * this.wingArea * this.wingspan * (Cl_beta * beta + Cl_p * p + Cl_control * this.rollInput);
-  const yawMoment  = qdyn * this.wingArea * this.wingspan * (Cn_beta * beta + Cn_r * r + Cn_control * this.yawInput);
-
+  // Apply moments to angular velocity
   this.angularVelocity.x += (rollMoment / this.I.x) * dt;
+  this.angularVelocity.y += (pitchMoment / this.I.y) * dt;
   this.angularVelocity.z += (yawMoment / this.I.z) * dt;
 
-  // -------------------------
-  // Aerodynamic forces
-  // -------------------------
+  // =============================
+  // FORCES
+  // =============================
   const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha));
   const Cd = this.findCd(Cl);
 
@@ -186,12 +180,10 @@ export class Aircraft {
   const Thrust = forward.clone().multiplyScalar(this.thrust);
   const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
 
-  const sideForce = qdyn * this.wingArea * 0.2 * (-0.5) * beta;
-  const Side = right.clone().multiplyScalar(sideForce);
+  // Side force
+  const Side = right.clone().multiplyScalar(qdyn * this.wingArea * Cy_beta * beta);
 
-  // -------------------------
-  // Total forces & velocity update
-  // -------------------------
+  // Total force
   const totalForce = new THREE.Vector3()
       .add(Lift)
       .add(Drag)
@@ -199,31 +191,55 @@ export class Aircraft {
       .add(Weight)
       .add(Side);
 
+  // =============================
+  // VELOCITY UPDATE
+  // =============================
   const accel = totalForce.multiplyScalar(1 / this.mass);
   this.velocity.addScaledVector(accel, dt);
 
-  // --- stabilization ---
+  // Drag stabilization
   this.velocity.multiplyScalar(0.999);
   this.velocity.clampLength(0, 250);
 
-  // --- angular damping ---
-  const damping = 0.5 + 0.002 * speed;
-  this.angularVelocity.multiplyScalar(1 - damping * dt);
+  // =============================
+  // CONTROL INPUTS
+  // =============================
+  // Inputs are torques applied along body axes
+  const rollInputTorque  = this.rollInput  * 2.0;  // adjust control authority
+  const pitchInputTorque = this.pitchInput * 2.0;
+  const yawInputTorque   = this.yawInput   * 1.5;
+
+  this.angularVelocity.x += rollInputTorque * dt;
+  this.angularVelocity.y += pitchInputTorque * dt;
+  this.angularVelocity.z += yawInputTorque * dt;
+
+  // Auto-roll stabilization (self-leveling)
+  const rollError = right.y;
+  this.angularVelocity.x += -rollError * 0.5 * dt;
+
+  // Clamp angular velocity to avoid numerical blow-up
   this.angularVelocity.clampLength(0, 3);
 
-  // --- quaternion rotation ---
+  // =============================
+  // QUATERNION UPDATE
+  // =============================
   const omega = this.angularVelocity.clone();
   const angle = omega.length() * dt;
+
   if (angle > 0.00001) {
     const axis = omega.clone().normalize();
     const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
     this.plane.quaternion.multiply(dq).normalize();
   }
 
-  // --- position ---
+  // =============================
+  // POSITION UPDATE
+  // =============================
   this.plane.position.addScaledVector(this.velocity, dt);
 
-  // --- ground collision ---
+  // =============================
+  // GROUND COLLISION
+  // =============================
   if (this.plane.position.y <= elevation) {
     this.plane.position.y = elevation;
     if (this.velocity.y < 0) this.velocity.y = 0;
