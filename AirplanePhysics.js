@@ -152,11 +152,18 @@ export class Aircraft {
 
   // --- SIDESLIP ---
   const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
-  const beta = Math.atan2(velBody.x, -velBody.z);
-  const Cy_beta = -0.6;  // side force coefficient
-  const sideForce = qdyn * this.wingArea * Cy_beta * beta;
-  // Apply side force along body right vector transformed to world frame
+  const forwardSpeed = Math.max(-velBody.z, 5);
+  const beta = Math.atan2(velBody.x, forwardSpeed);
+
+  // Side force
+  const Cy_beta = -0.6;
+  const sideForce = qdyn * this.wingArea * 0.2 * Cy_beta * beta;
   const Side = right.clone().multiplyScalar(sideForce);
+
+  // ✅ NEW: yaw stability (vertical tail)
+  const Cn_beta = -0.12;
+  const yawMoment = qdyn * this.wingArea * this.wingspan * Cn_beta * beta;
+  this.angularVelocity.z += (yawMoment / this.I.z) * dt;
     
   // --- SIDESLIP DAMPING ---
   const lateralDamping = -velBody.x * 0.5;
