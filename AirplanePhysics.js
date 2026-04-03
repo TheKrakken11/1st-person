@@ -148,8 +148,8 @@ export class Aircraft {
   // =============================
 
   // Pitch
-  const Cm_alpha = -0.8;
-  const Cm_q = -12.0;
+  const Cm_alpha = -0.3;
+  const Cm_q = -2.0;
 
   // Yaw
   const Cn_beta = 0.03;
