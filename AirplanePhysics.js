@@ -152,12 +152,12 @@ export class Aircraft {
   const Cm_q = -12.0;
 
   // Yaw
-  const Cn_beta = 0.02;
-  const Cn_r = -5.0;
+  const Cn_beta = 0.015;
+  const Cn_r = -8.0;
 
   // Roll
   const Cl_beta = -0.06;
-  const Cl_p = -0.5;
+  const Cl_p = -0.8;
 
   // Side force
   const Cy_beta = -0.5;
