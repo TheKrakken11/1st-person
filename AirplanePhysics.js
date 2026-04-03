@@ -127,9 +127,15 @@ export class Aircraft {
   this.airDensity = this.findRho();
   const qdyn = 0.5 * this.airDensity * speed * speed;
 
+  // --- BODY VELOCITY ---
+  const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
+
   // --- ANGLE OF ATTACK ---
-  const bodyVel = this.velocity.clone().applyQuaternion(q.clone().invert());
-  const alpha = Math.atan2(-bodyVel.y, -bodyVel.z);
+  const alpha = Math.atan2(-velBody.y, -velBody.z);
+
+  // --- SIDESLIP (FIXED: stable + correct sign) ---
+  const forwardSpeed = Math.max(-velBody.z, 5);
+  const beta = Math.atan2(-velBody.x, forwardSpeed);
 
   // --- PITCH STABILITY ---
   const pitchStability = -alpha * 3.0;
@@ -150,32 +156,24 @@ export class Aircraft {
   const Thrust = forward.clone().multiplyScalar(this.thrust);
   const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
 
-  // --- SIDESLIP ---
-  const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
-  const forwardSpeed = Math.max(-velBody.z, 5);
-  const beta = Math.atan2(velBody.x, forwardSpeed);
-
-  // Side force
-  const Cy_beta = -0.6;
+  // --- SIDE FORCE (reduced + stabilized) ---
+  const Cy_beta = -0.5;
   const sideForce = qdyn * this.wingArea * 0.2 * Cy_beta * beta;
   const Side = right.clone().multiplyScalar(sideForce);
 
-  // ✅ NEW: yaw stability (vertical tail)
-  const Cn_beta = -0.12;
+  // --- LATERAL DAMPING ---
+  const lateralDamping = -velBody.x * 0.5;
+  const SideDamping = right.clone().multiplyScalar(lateralDamping * qdyn * 0.05);
+
+  // --- YAW STABILITY (FIXED: real restoring moment) ---
+  const Cn_beta = 0.08;
   const yawMoment = qdyn * this.wingArea * this.wingspan * Cn_beta * beta;
   this.angularVelocity.z += (yawMoment / this.I.z) * dt;
-    
-  // --- SIDESLIP DAMPING ---
-  const lateralDamping = -velBody.x * 0.5;
-  const SideDamping = right.clone().multiplyScalar(lateralDamping * qdyn * 0.1);
 
-  // --- YAW DAMPING + AUTO YAW CORRECTION ---
-  const yawDamping = -this.angularVelocity.z * 1.5;
-
-  // Automatic yaw to counter residual sideslip
-  const autoYaw = -beta * 0.5;  // small stabilizing correction
-
-  this.angularVelocity.z += (yawDamping + autoYaw) * dt;
+  // --- ROLL STABILITY (dihedral effect - FIXED) ---
+  const Cl_beta = -0.08;
+  const rollMoment = qdyn * this.wingArea * this.wingspan * Cl_beta * beta;
+  this.angularVelocity.x += (rollMoment / this.I.x) * dt;
 
   // --- TOTAL FORCES ---
   const totalForce = new THREE.Vector3()
@@ -190,32 +188,30 @@ export class Aircraft {
   const accel = totalForce.multiplyScalar(1 / this.mass);
   this.velocity.addScaledVector(accel, dt);
 
-  // natural drag stabilization
+  // drag stabilization
   this.velocity.multiplyScalar(0.999);
   this.velocity.clampLength(0, 250);
 
-  // --- ROTATION CONTROL ---
+  // --- ROTATION CONTROL (FIXED: no double yaw damping) ---
   const rollRate  = this.rollInput  * 1.8;
   const pitchRate = this.pitchInput * 1.2;
   const yawRate   = this.yawInput   * 0.8;
 
-  // self-leveling roll stability
   const rollError = right.y;
   const autoRoll = -rollError * 0.5;
 
-  // Apply angular velocity updates in body axes
   this.angularVelocity.x += (rollRate + autoRoll - this.angularVelocity.x * 1.2) * dt;
   this.angularVelocity.y += (pitchRate - this.angularVelocity.y * 0.8) * dt;
   this.angularVelocity.z += (yawRate - this.angularVelocity.z * 1.5) * dt;
 
-  // --- QUATERNION UPDATE (BODY AXIS) ---
+  // --- QUATERNION UPDATE ---
   const omega = this.angularVelocity.clone();
   const angle = omega.length() * dt;
 
   if (angle > 0.00001) {
-    const axis = omega.clone().normalize(); // keep in body frame
+    const axis = omega.clone().normalize();
     const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-    this.plane.quaternion.multiply(dq).normalize(); // integrate properly
+    this.plane.quaternion.multiply(dq).normalize();
   }
 
   // --- POSITION UPDATE ---
