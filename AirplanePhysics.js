@@ -164,6 +164,10 @@ export class Aircraft {
   this.angularVelocity.y += THREE.MathUtils.clamp((pitchMoment / this.I.y) * dt, -maxAngAccel, maxAngAccel);
   this.angularVelocity.z += THREE.MathUtils.clamp((yawMoment / this.I.z) * dt, -maxAngAccel, maxAngAccel);
 
+  // --- NOSE-UP TRIM (STATIC STABILITY) ---
+  const trimPitch = 0.02;
+  this.angularVelocity.y += trimPitch * dt;
+
   // =============================
   // FORCES
   // =============================
