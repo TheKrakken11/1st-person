@@ -11,6 +11,8 @@ let mouseDeltaX = 0;
 let mouseDeltaY = 0;
 let keys = {};
 let rudderInput = 0;
+let rollInput = 0;
+let pitchInput = 0;
 let touchActive = false;
 let lastTouchX = 0;
 let lastTouchY = 0;
@@ -265,9 +267,23 @@ function animate() {
 
 function updateControls(aircraft) {
   if (pointerLocked || touchActive) {
-    const sensitivity = 0.02; // adjust to your preference
-    aircraft.setYawInput(-mouseDeltaX * sensitivity * 2);
-    aircraft.setRollInput(-mouseDeltaY * sensitivity); // invert Y axis
+    const sensitivity = 0.04; // adjust to your preference
+    if (keys['KeyW']) {
+      pitchInput = -0.5;
+    } else if (keys['KeyS']) {
+      pitchInput = 0.5;
+    } else {
+      pitchInput = 0;
+    }
+    if (keys['KeyA']) {
+      rollInput = 0.5;
+    } else if (keys['KeyD']) {
+      rollInput = -0.5;
+    } else {
+      rollInput = 0;
+    }
+    aircraft.setYawInput(-mouseDeltaX * sensitivity * 2 + rollInput);
+    aircraft.setRollInput(-mouseDeltaY * sensitivity + pitchInput); // invert Y axis
     if (keys['KeyQ']) {
       rudderInput = 0.5;
     } else if (keys['KeyE']) {
