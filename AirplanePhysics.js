@@ -149,7 +149,7 @@ export class Aircraft {
   // =============================
   const Cm_alpha = -0.3;
   const Cm_q = -2.0;
-  const Cn_beta = 0.03;
+  const Cn_beta = -0.03;
   const Cn_r = -8.0;
   const Cl_beta = -0.02;
   const Cl_p = -1.0;
