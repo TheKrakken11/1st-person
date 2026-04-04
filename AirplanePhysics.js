@@ -170,13 +170,16 @@ export class Aircraft {
 
   // --- NOSE-UP TRIM (STATIC STABILITY) ---
   // Auto-trim to cancel steady-state pitching moment
-  const trimPitch = -Cm_alpha * alpha;
-  this.angularVelocity.y += trimPitch * dt;
+  const trimScale = qdyn * this.wingArea * this.wingspan / this.I.y;
+  const trimPitch = -Cm_alpha * alpha * trimScale;
+  const pitchTarget = pitchRate + trimPitch;
+  this.angularVelocity.y += (pitchTarget - this.angularVelocity.y) * dampingFactor;
 
   // --- YAW TRIM ---
   // Yaw trim to kill drift
-  const trimYaw = -Cn_beta * beta;
-  this.angularVelocity.z += trimYaw * dt;
+  const trimYaw = -Cn_beta * beta * trimScale;
+  const yawTarget = yawRate + trimYaw;
+  this.angularVelocity.z += (yawTarget - this.angularVelocity.z) * dampingFactor;
   
   // =============================
   // FORCES
@@ -221,8 +224,6 @@ export class Aircraft {
 
   const dampingFactor = 1 - Math.exp(-8 * dt); // smooth, timestep-independent
   this.angularVelocity.x += (rollRate + autoRoll - this.angularVelocity.x) * dampingFactor;
-  this.angularVelocity.y += (pitchRate - this.angularVelocity.y) * dampingFactor;
-  this.angularVelocity.z += (yawRate - this.angularVelocity.z) * dampingFactor;
 
   // --- SAFETY CLAMP ---
   this.angularVelocity.clampLength(0, 3);
