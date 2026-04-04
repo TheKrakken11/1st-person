@@ -182,7 +182,7 @@ export class Aircraft {
   // --- YAW TRIM ---
   // Yaw trim to kill drift
   const yawRate   = this.yawInput   * 0.8;
-  const trimYaw = -Cn_beta * beta * trimScale * 0.3;
+  const trimYaw = -Cn_beta * beta * trimScale * 0.15;
   const yawTarget = yawRate + trimYaw;
   this.angularVelocity.z += (yawTarget - this.angularVelocity.z) * dampingFactor;
   
@@ -195,7 +195,15 @@ export class Aircraft {
   const lift = qdyn * this.wingArea * Cl;
   const drag = qdyn * this.wingArea * Cd;
 
-  const liftDir = up.clone().addScaledVector(velDir, -up.dot(velDir)).normalize();
+  // Remove sideways component BEFORE computing lift
+  const velNoSide = velDir.clone()
+    .addScaledVector(right, -velDir.dot(right))
+    .normalize();
+
+  // Now compute lift direction only from vertical plane motion
+  const liftDir = up.clone()
+    .addScaledVector(velNoSide, -up.dot(velNoSide))
+    .normalize();
   const Lift = liftDir.clone().multiplyScalar(lift);
   const Drag = velDir.clone().multiplyScalar(-drag);
   const Thrust = forward.clone().multiplyScalar(this.thrust);
