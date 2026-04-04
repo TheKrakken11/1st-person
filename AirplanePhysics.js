@@ -149,7 +149,7 @@ export class Aircraft {
   const Cn_r = -8.0;
   const Cl_beta = -0.02;
   const Cl_p = -1.0;
-  const Cy_beta = -0.5;
+  const Cy_beta = 0; //temporary for debugging
 
   // =============================
   // MOMENTS
