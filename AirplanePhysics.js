@@ -168,6 +168,9 @@ export class Aircraft {
   this.angularVelocity.y += THREE.MathUtils.clamp((pitchMoment / this.I.y) * dt, -maxAngAccel, maxAngAccel);
   this.angularVelocity.z += THREE.MathUtils.clamp((yawMoment / this.I.z) * dt, -maxAngAccel, maxAngAccel);
 
+  // --- DAMPING FACTOR ---
+  const dampingFactor = 1 - Math.exp(-8 * dt); // smooth, timestep-independent
+    
   // --- NOSE-UP TRIM (STATIC STABILITY) ---
   // Auto-trim to cancel steady-state pitching moment
   const pitchRate = this.pitchInput * 1.2;
@@ -222,7 +225,6 @@ export class Aircraft {
   const rollError = right.y;
   const autoRoll = -rollError * 1.0;
 
-  const dampingFactor = 1 - Math.exp(-8 * dt); // smooth, timestep-independent
   this.angularVelocity.x += (rollRate + autoRoll - this.angularVelocity.x) * dampingFactor;
 
   // --- SAFETY CLAMP ---
