@@ -129,7 +129,7 @@ async function init3d() {
   scene.add(plane);
   plane.scale.set(0.3048, 0.3048, 0.3048);
   plane.position.y = 1000;
-  plane.rotation.x = 2 * Math.PI / 180
+  // plane.rotation.x = 2 * Math.PI / 180
   thrust.play();
   const camOff = new THREE.Vector3(0, 5, 15);
   plane.add(camera);
