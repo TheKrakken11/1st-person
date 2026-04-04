@@ -196,15 +196,7 @@ export class Aircraft {
   const lift = qdyn * this.wingArea * Cl;
   const drag = qdyn * this.wingArea * Cd;
 
-  // Remove sideways component BEFORE computing lift
-  const velNoSide = velDir.clone()
-    .addScaledVector(right, -velDir.dot(right))
-    .normalize();
-
-  // Now compute lift direction only from vertical plane motion
-  const liftDir = up.clone()
-    .addScaledVector(velNoSide, -up.dot(velNoSide))
-    .normalize();
+  const liftDir = up.clone().addScaledVector(velDir, -up.dot(velDir)).normalize();
   const Lift = liftDir.clone().multiplyScalar(lift);
   const Drag = velDir.clone().multiplyScalar(-drag);
   const Thrust = forward.clone().multiplyScalar(this.thrust);
