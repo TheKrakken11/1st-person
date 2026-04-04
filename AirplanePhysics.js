@@ -182,9 +182,9 @@ export class Aircraft {
   // --- YAW TRIM ---
   // Yaw trim to kill drift
   const yawRate   = this.yawInput   * 0.8;
-  const trimYaw = -Cn_beta * beta * trimScale * 0.05;
-  const yawTarget = yawRate + trimYaw;
-  this.angularVelocity.z += (yawTarget - this.angularVelocity.z) * dampingFactor;
+  // const trimYaw = -Cn_beta * beta * trimScale * 0.05;
+  // const yawTarget = yawRate + trimYaw;
+  // this.angularVelocity.z += (yawTarget - this.angularVelocity.z) * dampingFactor;
   
   // =============================
   // FORCES
