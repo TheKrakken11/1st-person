@@ -133,7 +133,8 @@ export class Aircraft {
   // --- ANGLES ---
   const alpha = Math.atan2(-velBody.y, -velBody.z);
   const forwardSpeed = Math.max(-velBody.z, 5);
-  const beta = THREE.MathUtils.clamp(Math.atan2(-velBody.x, forwardSpeed), -0.5, 0.5);
+  // const beta = THREE.MathUtils.clamp(Math.atan2(-velBody.x, forwardSpeed), -0.5, 0.5);
+  const beta = 0 // temporary for testing
   // Kill tiny drift (numerical stability)
   if (Math.abs(beta) < 0.01) {
     this.angularVelocity.z *= 0.98;
