@@ -113,132 +113,115 @@ export class Aircraft {
     this.yawInput = THREE.MathUtils.clamp(value, -1, 1);
   }
   update(dt, elevation) {
-  const q = this.plane.quaternion;
+    const q = this.plane.quaternion;
 
-  // --- BODY AXES ---
-  const forward = new THREE.Vector3(0,0,-1).applyQuaternion(q);
-  const right   = new THREE.Vector3(1,0,0).applyQuaternion(q);
-  const up      = new THREE.Vector3(0,1,0).applyQuaternion(q);
+    // --- BODY AXES ---
+    const forward = new THREE.Vector3(0,0,-1).applyQuaternion(q);
+    const right   = new THREE.Vector3(1,0,0).applyQuaternion(q);
+    const up      = new THREE.Vector3(0,1,0).applyQuaternion(q);
 
-  const speed = Math.max(this.velocity.length(), 0.1);
-  const velDir = this.velocity.clone().normalize();
+    // --- AIR DENSITY ---
+    this.airDensity = this.findRho();
+    
+    // --- SPEED & directions ---
+    const speed = Math.max(this.velocity.length(), 0.1);
+    const velDir = this.velocity.clone().normalize();
+    const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
 
-  // --- AIR DENSITY ---
-  this.airDensity = this.findRho();
-  const qdyn = 0.5 * this.airDensity * speed * speed;
+    // --- ANGLES ---
+    const alpha = Math.atan2(-velBody.y, -velBody.z);
+    const forwardSpeed = Math.max(-velBody.z, 5);
+    const beta = THREE.MathUtils.clamp(Math.atan2(-velBody.x, forwardSpeed), -0.5, 0.5);
 
-  // --- BODY VELOCITY ---
-  const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
+    // --- DYNAMIC PRESSURE ---
+    const qdyn = 0.5 * this.airDensity * speed * speed;
 
-  // --- ANGLES ---
-  const alpha = Math.atan2(-velBody.y, -velBody.z);
-  const forwardSpeed = Math.max(-velBody.z, 5);
-  const beta = THREE.MathUtils.clamp(Math.atan2(-velBody.x, forwardSpeed), -0.5, 0.5);
+    // --- AERODYNAMIC COEFFICIENTS ---
+    const Cm_alpha = -0.3;
+    const Cm_q     = -2.0;
+    const Cn_beta  = 0.03;
+    const Cn_r     = -8.0;
+    const Cl_beta  = -0.02;
+    const Cl_p     = -1.0;
+    const Cy_beta  = 0;
 
-  // --- NORMALIZED RATES ---
-  const p = this.angularVelocity.x * this.wingspan / (2 * speed);
-  const qRate = this.angularVelocity.y * this.wingspan / (2 * speed);
-  const r = this.angularVelocity.z * this.wingspan / (2 * speed);
+    // --- ANGULAR RATES (normalized) ---
+    const p = this.angularVelocity.x * this.wingspan / (2 * speed);
+    const qRate = this.angularVelocity.y * this.wingspan / (2 * speed);
+    const r = this.angularVelocity.z * this.wingspan / (2 * speed);
 
-  // =============================
-  // AERODYNAMIC COEFFICIENTS
-  // =============================
-  const Cm_alpha = -0.3;
-  const Cm_q = -2.0;
-  const Cn_beta = 0.03;
-  const Cn_r = -8.0;
-  const Cl_beta = -0.02;
-  const Cl_p = -1.0;
-  const Cy_beta = 0; //temporary for debugging
+    // --- MOMENTS ---
+    const pitchMoment = qdyn * this.wingArea * this.wingspan * (Cm_alpha * alpha + Cm_q * qRate);
+    const yawMoment   = qdyn * this.wingArea * this.wingspan * (Cn_beta * beta + Cn_r * r);
+    const rollMoment  = qdyn * this.wingArea * this.wingspan * (Cl_beta * beta + Cl_p * p);
 
-  // =============================
-  // MOMENTS
-  // =============================
-  const pitchMoment = qdyn * this.wingArea * this.wingspan * (Cm_alpha * alpha + Cm_q * qRate);
-  const yawMoment   = qdyn * this.wingArea * this.wingspan * (Cn_beta * beta + Cn_r * r);
-  const rollMoment  = qdyn * this.wingArea * this.wingspan * (Cl_beta * beta + Cl_p * p);
+    // --- CONTROL TORQUES ---
+    const maxRollTorque  = 1.5;
+    const maxPitchTorque = 1.2;
+    const maxYawTorque   = 0.8;
 
-  // --- CLAMPED ANGULAR ACCELERATION ---
-  const maxAngAccel = 5; // rad/s^2
-  this.angularVelocity.x += THREE.MathUtils.clamp((rollMoment / this.I.x) * dt, -maxAngAccel, maxAngAccel);
-  this.angularVelocity.y += THREE.MathUtils.clamp((pitchMoment / this.I.y) * dt, -maxAngAccel, maxAngAccel);
-  this.angularVelocity.z += THREE.MathUtils.clamp((yawMoment / this.I.z) * dt, -maxAngAccel, maxAngAccel);
+    const controlRoll  = this.rollInput  * maxRollTorque;
+    const controlPitch = this.pitchInput * maxPitchTorque;
+    const controlYaw   = this.yawInput   * maxYawTorque;
 
-  // --- NOSE-UP TRIM (STATIC STABILITY) ---
-  const trimPitch = 0.02;
-  this.angularVelocity.y += trimPitch * dt;
+    // --- TOTAL TORQUES ---
+    const totalRoll  = rollMoment  + controlRoll;
+    const totalPitch = pitchMoment + controlPitch;
+    const totalYaw   = yawMoment   + controlYaw;
 
-  // =============================
-  // FORCES
-  // =============================
-  const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha));
-  const Cd = this.findCd(Cl);
+    // --- ANGULAR ACCELERATION ---
+    this.angularVelocity.x += (totalRoll / this.I.x) * dt;
+    this.angularVelocity.y += (totalPitch / this.I.y) * dt;
+    this.angularVelocity.z += (totalYaw / this.I.z) * dt;
 
-  const lift = qdyn * this.wingArea * Cl;
-  const drag = qdyn * this.wingArea * Cd;
+    // --- SIMPLE ANGULAR DAMPING ---
+    const angularDamping = 0.995;
+    this.angularVelocity.multiplyScalar(angularDamping);
 
-  const liftDir = forward.clone().cross(right).cross(forward).normalize();
-  const Lift = liftDir.clone().multiplyScalar(lift);
-  const Drag = velDir.clone().multiplyScalar(-drag);
-  const Thrust = forward.clone().multiplyScalar(this.thrust);
-  const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
+    // --- LIFT AND DRAG ---
+    const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha));
+    const Cd = this.findCd(Cl);
 
-  const sideForce = qdyn * this.wingArea * 0.2 * Cy_beta * beta;
-  const Side = right.clone().multiplyScalar(sideForce);
+    const lift = qdyn * this.wingArea * Cl;
+    const drag = qdyn * this.wingArea * Cd;
 
-  const totalForce = new THREE.Vector3()
-      .add(Lift)
-      .add(Drag)
-      .add(Thrust)
-      .add(Weight)
-      .add(Side);
+    const liftDir = new THREE.Vector3(0,1,0).applyQuaternion(q).normalize();
+    const Lift = liftDir.clone().multiplyScalar(lift);
+    const Drag = velDir.clone().multiplyScalar(-drag);
+    const Thrust = forward.clone().multiplyScalar(this.thrust);
+    const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
 
-  // --- VELOCITY UPDATE ---
-  const accel = totalForce.multiplyScalar(1 / this.mass);
-  this.velocity.addScaledVector(accel, dt);
-  this.velocity.multiplyScalar(0.999); // drag stabilization
-  this.velocity.clampLength(0, 250);
+    const totalForce = new THREE.Vector3()
+        .add(Lift)
+        .add(Drag)
+        .add(Thrust)
+        .add(Weight);
 
-  // =============================
-  // CONTROL INPUTS WITH EXPONENTIAL DAMPING
-  // =============================
-  const rollRate  = this.rollInput  * 1.8;
-  const pitchRate = this.pitchInput * 1.2;
-  const yawRate   = this.yawInput   * 0.8;
+    // --- VELOCITY UPDATE ---
+    this.velocity.addScaledVector(totalForce.clone().multiplyScalar(1 / this.mass), dt);
+    this.velocity.multiplyScalar(0.999); // optional linear damping
+    this.velocity.clampLength(0, 250);
 
-  const rollError = right.y;
-  // const autoRoll = -rollError * 0.5;
+    // --- QUATERNION UPDATE ---
+    const omega = this.angularVelocity.clone();
+    const angle = omega.length() * dt;
+    if (angle > 1e-5) {
+        const axis = omega.clone().normalize();
+        const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+        this.plane.quaternion.multiply(dq);
+        this.plane.quaternion.normalize();
+    }
 
-  const dampingFactor = 1 - Math.exp(-8 * dt); // smooth, timestep-independent
-  this.angularVelocity.x += (rollRate - this.angularVelocity.x) * dampingFactor; // temporary autoRoll removal
-  this.angularVelocity.y += (pitchRate - this.angularVelocity.y) * dampingFactor;
-  this.angularVelocity.z += (yawRate - this.angularVelocity.z) * dampingFactor;
+    // --- POSITION UPDATE ---
+    this.plane.position.addScaledVector(this.velocity, dt);
 
-  // --- SAFETY CLAMP ---
-  this.angularVelocity.clampLength(0, 3);
-
-  // =============================
-  // QUATERNION UPDATE (SMOOTHED)
-  // =============================
-  const omega = this.angularVelocity.clone();
-  const angle = omega.length() * dt;
-  if (angle > 1e-5) {
-      const axis = omega.clone().normalize();
-      const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-      this.plane.quaternion.multiply(dq);
-      this.plane.quaternion.normalize();
-  }
-
-  // --- POSITION UPDATE ---
-  this.plane.position.addScaledVector(this.velocity, dt);
-
-  // --- GROUND COLLISION ---
-  if (this.plane.position.y <= elevation) {
-      this.plane.position.y = elevation;
-      if (this.velocity.y < 0) this.velocity.y = 0;
-      this.velocity.x *= 0.7;
-      this.velocity.z *= 0.7;
-      this.angularVelocity.multiplyScalar(0.3);
-  }
+    // --- GROUND COLLISION ---
+    if (this.plane.position.y <= elevation) {
+        this.plane.position.y = elevation;
+        if (this.velocity.y < 0) this.velocity.y = 0;
+        this.velocity.x *= 0.7;
+        this.velocity.z *= 0.7;
+        this.angularVelocity.multiplyScalar(0.3);
+    }
   }
 }
