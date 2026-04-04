@@ -225,7 +225,8 @@ export class Aircraft {
   if (angle > 1e-5) {
       const axis = omega.clone().normalize();
       const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-      this.plane.quaternion.slerp(this.plane.quaternion.clone().multiply(dq), 0.5);
+      this.plane.quaternion.multiply(dq);
+      this.plane.quaternion.normalize();
   }
 
   // --- POSITION UPDATE ---
