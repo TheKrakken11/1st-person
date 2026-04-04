@@ -207,10 +207,10 @@ export class Aircraft {
   const yawRate   = this.yawInput   * 0.8;
 
   const rollError = right.y;
-  const autoRoll = -rollError * 0.5;
+  // const autoRoll = -rollError * 0.5;
 
   const dampingFactor = 1 - Math.exp(-8 * dt); // smooth, timestep-independent
-  this.angularVelocity.x += (rollRate + autoRoll - this.angularVelocity.x) * dampingFactor;
+  this.angularVelocity.x += (rollRate - this.angularVelocity.x) * dampingFactor; // temporary autoRoll removal
   this.angularVelocity.y += (pitchRate - this.angularVelocity.y) * dampingFactor;
   this.angularVelocity.z += (yawRate - this.angularVelocity.z) * dampingFactor;
 
