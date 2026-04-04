@@ -134,6 +134,10 @@ export class Aircraft {
   const alpha = Math.atan2(-velBody.y, -velBody.z);
   const forwardSpeed = Math.max(-velBody.z, 5);
   const beta = THREE.MathUtils.clamp(Math.atan2(-velBody.x, forwardSpeed), -0.5, 0.5);
+  // Kill tiny drift (numerical stability)
+  if (Math.abs(beta) < 0.01) {
+    this.angularVelocity.z *= 0.98;
+  }
 
   // --- NORMALIZED RATES ---
   const p = this.angularVelocity.x * this.wingspan / (2 * speed);
@@ -165,9 +169,15 @@ export class Aircraft {
   this.angularVelocity.z += THREE.MathUtils.clamp((yawMoment / this.I.z) * dt, -maxAngAccel, maxAngAccel);
 
   // --- NOSE-UP TRIM (STATIC STABILITY) ---
-  const trimPitch = 0.02;
+  // Auto-trim to cancel steady-state pitching moment
+  const trimPitch = -Cm_alpha * alpha;
   this.angularVelocity.y += trimPitch * dt;
 
+  // --- YAW TRIM ---
+  // Yaw trim to kill drift
+  const trimYaw = -Cn_beta * beta;
+  this.angularVelocity.z += trimYaw * dt;
+  
   // =============================
   // FORCES
   // =============================
@@ -183,7 +193,7 @@ export class Aircraft {
   const Thrust = forward.clone().multiplyScalar(this.thrust);
   const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
 
-  const sideForce = qdyn * this.wingArea * 0.2 * Cy_beta * beta;
+  const sideForce = qdyn * this.wingArea * 0.05 * Cy_beta * beta;
   const Side = right.clone().multiplyScalar(sideForce);
 
   const totalForce = new THREE.Vector3()
@@ -207,7 +217,7 @@ export class Aircraft {
   const yawRate   = this.yawInput   * 0.8;
 
   const rollError = right.y;
-  const autoRoll = -rollError * 0.5;
+  const autoRoll = -rollError * 1.0;
 
   const dampingFactor = 1 - Math.exp(-8 * dt); // smooth, timestep-independent
   this.angularVelocity.x += (rollRate + autoRoll - this.angularVelocity.x) * dampingFactor;
