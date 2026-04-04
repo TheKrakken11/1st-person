@@ -120,65 +120,20 @@ export class Aircraft {
     const right   = new THREE.Vector3(1,0,0).applyQuaternion(q);
     const up      = new THREE.Vector3(0,1,0).applyQuaternion(q);
 
-    // --- AIR DENSITY ---
-    this.airDensity = this.findRho();
-    
-    // --- SPEED & directions ---
     const speed = Math.max(this.velocity.length(), 0.1);
     const velDir = this.velocity.clone().normalize();
-    const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
 
-    // --- ANGLES ---
+    // --- AIR DENSITY ---
+    this.airDensity = this.findRho();
+    const qdyn = 0.5 * this.airDensity * speed * speed;
+
+    // --- ANGLES OF ATTACK / SIDESLIP ---
+    const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
     const alpha = Math.atan2(-velBody.y, -velBody.z);
     const forwardSpeed = Math.max(-velBody.z, 5);
     const beta = THREE.MathUtils.clamp(Math.atan2(-velBody.x, forwardSpeed), -0.5, 0.5);
 
-    // --- DYNAMIC PRESSURE ---
-    const qdyn = 0.5 * this.airDensity * speed * speed;
-
-    // --- AERODYNAMIC COEFFICIENTS ---
-    const Cm_alpha = -0.3;
-    const Cm_q     = -2.0;
-    const Cn_beta  = 0.03;
-    const Cn_r     = -8.0;
-    const Cl_beta  = -0.02;
-    const Cl_p     = -1.0;
-    const Cy_beta  = 0;
-
-    // --- ANGULAR RATES (normalized) ---
-    const p = this.angularVelocity.x * this.wingspan / (2 * speed);
-    const qRate = this.angularVelocity.y * this.wingspan / (2 * speed);
-    const r = this.angularVelocity.z * this.wingspan / (2 * speed);
-
-    // --- MOMENTS ---
-    const pitchMoment = qdyn * this.wingArea * this.wingspan * (Cm_alpha * alpha + Cm_q * qRate);
-    const yawMoment   = qdyn * this.wingArea * this.wingspan * (Cn_beta * beta + Cn_r * r);
-    const rollMoment  = qdyn * this.wingArea * this.wingspan * (Cl_beta * beta + Cl_p * p);
-
-    // --- CONTROL TORQUES ---
-    const maxRollTorque  = 1.5;
-    const maxPitchTorque = 1.2;
-    const maxYawTorque   = 0.8;
-
-    const controlRoll  = this.rollInput  * maxRollTorque;
-    const controlPitch = this.pitchInput * maxPitchTorque;
-    const controlYaw   = this.yawInput   * maxYawTorque;
-
-    // --- TOTAL TORQUES ---
-    const totalRoll  = rollMoment  + controlRoll;
-    const totalPitch = pitchMoment + controlPitch;
-    const totalYaw   = yawMoment   + controlYaw;
-
-    // --- ANGULAR ACCELERATION ---
-    this.angularVelocity.x += (totalRoll / this.I.x) * dt;
-    this.angularVelocity.y += (totalPitch / this.I.y) * dt;
-    this.angularVelocity.z += (totalYaw / this.I.z) * dt;
-
-    // --- SIMPLE ANGULAR DAMPING ---
-    const angularDamping = 0.995;
-    this.angularVelocity.multiplyScalar(angularDamping);
-
-    // --- LIFT AND DRAG ---
+    // --- AERODYNAMIC FORCES ---
     const Cl = this.findCl(THREE.MathUtils.radToDeg(alpha));
     const Cd = this.findCd(Cl);
 
@@ -189,7 +144,7 @@ export class Aircraft {
     const Lift = liftDir.clone().multiplyScalar(lift);
     const Drag = velDir.clone().multiplyScalar(-drag);
     const Thrust = forward.clone().multiplyScalar(this.thrust);
-    const Weight = new THREE.Vector3(0, -this.mass * this.gravity, 0);
+    const Weight = new THREE.Vector3(0,-this.mass*this.gravity,0);
 
     const totalForce = new THREE.Vector3()
         .add(Lift)
@@ -198,9 +153,30 @@ export class Aircraft {
         .add(Weight);
 
     // --- VELOCITY UPDATE ---
-    this.velocity.addScaledVector(totalForce.clone().multiplyScalar(1 / this.mass), dt);
-    this.velocity.multiplyScalar(0.999); // optional linear damping
+    const accel = totalForce.multiplyScalar(1/this.mass);
+    this.velocity.addScaledVector(accel, dt);
+    this.velocity.multiplyScalar(0.999); // drag stabilization
     this.velocity.clampLength(0, 250);
+
+    // --- CONTROL INPUTS AS TORQUE ---
+    const maxTorque = 2.0; // limit angular acceleration
+    const rollTorque  = this.rollInput  * maxTorque;
+    const pitchTorque = this.pitchInput * maxTorque;
+    const yawTorque   = this.yawInput   * maxTorque;
+
+    // Apply torques to angular velocity
+    this.angularVelocity.x += rollTorque * dt;
+    this.angularVelocity.y += pitchTorque * dt;
+    this.angularVelocity.z += yawTorque * dt;
+
+    // --- ZERO OUT VERY SMALL ANGULAR VELOCITIES ---
+    const angThreshold = 0.001;
+    if (Math.abs(this.angularVelocity.x) < angThreshold) this.angularVelocity.x = 0;
+    if (Math.abs(this.angularVelocity.y) < angThreshold) this.angularVelocity.y = 0;
+    if (Math.abs(this.angularVelocity.z) < angThreshold) this.angularVelocity.z = 0;
+
+    // --- ANGULAR DAMPING ---
+    this.angularVelocity.multiplyScalar(0.98);
 
     // --- QUATERNION UPDATE ---
     const omega = this.angularVelocity.clone();
