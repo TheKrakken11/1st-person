@@ -108,7 +108,7 @@ async function init3d() {
   mixer = new THREE.AnimationMixer(plane);
   const animations = obj.animations;
   const thrustbase = createCombinedClip(animations, [
-    "thrust0", "thrust1", "thrust2", "thrust3", "thrust4", "thrust5", "thrust6", "thrust7", "thrust8", "thrust9"
+    "thrust0", "thrust1", "thrust2", "thrust3", "thrust4", "thrust5", "thrust6", "thrust7"
     ], "thrust");
   const landbase = createCombinedClip(animations, [
     "landing11", "landing12", "landing13", "landing14", "landing15", "landing16", "landing17", "landing18", "landing21", "landing22", "landing23", "landing31", "landing32", "landing33"
