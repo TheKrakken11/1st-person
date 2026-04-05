@@ -103,7 +103,7 @@ async function init3d() {
   // Optional grid for scale reference
   // scene.add(new THREE.GridHelper(100, 100));
   // Load jet
-  const obj = await loader.loadAsync('jet.glb');
+  const obj = await loader.loadAsync('jetv2.glb');
   plane = obj.scene;
   mixer = new THREE.AnimationMixer(plane);
   const animations = obj.animations;
