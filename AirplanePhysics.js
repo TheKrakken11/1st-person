@@ -174,10 +174,6 @@ export class Aircraft {
     this.angularVelocity.y += pitchTorque * dt;
     this.angularVelocity.z += yawTorque * dt;
 
-    // Dihedral
-    const dihedralStrength = 0;
-    this.angularVelocity.x += -beta * dihedralStrength * (1 - Math.abs(this.rollInput)) * dt;
-
     // --- ZERO OUT VERY SMALL ANGULAR VELOCITIES ---
     const angThreshold = 0.001;
     if (Math.abs(this.angularVelocity.x) < angThreshold) this.angularVelocity.x = 0;
