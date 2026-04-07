@@ -131,7 +131,7 @@ async function init3d() {
   plane.position.y = 1000;
   // plane.rotation.x = 2 * Math.PI / 180
   thrust.play();
-  const camOff = new THREE.Vector3(0, 5, 15);
+  const camOff = new THREE.Vector3(0, 6, 25);
   plane.add(camera);
   camera.position.copy(camOff);
   planePhysics = new Aircraft({
@@ -213,6 +213,10 @@ async function init3d() {
     }
   });
   document.getElementById('loading')?.remove();
+  document.getElementById('velocity').style.display = "block";
+  document.getElementById('vy').style.display = "block";
+  document.getElementById('alt').style.display = "block";
+  document.getElementById('seaalt').style.display = "block";
   last = performance.now();
   animate();
 }
@@ -262,6 +266,14 @@ function animate() {
   const delta = clock.getDelta();
   mixer.update(delta);
   last = performance.now()
+  document.getElementById('velocity').textContent = `VELOCITY: ${Math.ceil(planePhysics.velocity.length() * 1.94384)} KTS`
+  if (Math.ceil(planePhysics.velocity.y * 3.28084) >= 0) {
+    document.getElementById('vy').textContent = `ASCENT RATE: ${Math.ceil(planePhysics.velocity.y * 3.28084)} FT/S`
+  } else {
+    document.getElementById('vy').textContent = `DESCENT RATE: ${-Math.ceil(planePhysics.velocity.y * 3.28084)} FT/S`
+  }
+  document.getElementById('alt').textContent = `GROUND-RELATIVE ALTITUDE: ${Math.ceil((plane.position.y - elevation) * 3.28084)} FT`
+  document.getElementById('seaalt').textContent = `ABSOLUTE ALTITUDE: ${Math.ceil(plane.position.y * 3.28084)} FT`
   renderer.render(scene, camera);
 }
 

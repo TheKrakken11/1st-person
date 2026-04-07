@@ -27,6 +27,54 @@
 			z-index: 10;
 			pointer-events: none;
 		}
+		#velocity {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			left: 30px;
+			bottom: 30px;
+			display: none;
+		}
+		#vy {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			left: 30px;
+			bottom: 60px;
+			display: none;
+		}
+		#alt {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			left: 30px;
+			bottom: 90px;
+			display: none;
+		}
+		#seaalt {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			left: 30px;
+			bottom: 120px;
+			display: none;
+		}
 		#creditsModal {
 			display: none;
 			position: fixed;
@@ -56,6 +104,18 @@
 	</style>
 	<div id="loading">
 		Loading...
+	</div>
+	<div id="velocity">
+		VELOCITY: _ KTS
+	</div>
+	<div id="vy">
+		VERTICAL SPEED: _ FT/S
+	</div>
+	<div id="alt">
+		ALTITUDE (GROUND-RELATIVE): _ FT
+	</div>
+	<div id="seaalt">
+		ALTITUDE (GROUND-RELATIVE): _ FT
 	</div>
 	<button onclick="document.getElementById('creditsModal').style.display='block'" style="
 		position: fixed;
