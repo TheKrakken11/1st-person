@@ -83,9 +83,9 @@ export class Aircraft {
     const speed = Math.max(this.velocity.length(), 0.1);
     const mach = speed / 343; // speed of sound ~343 m/s at sea level
     let CdWave = 0;
-    if (mach > 0.8) {
-        const machRise = (mach - 0.8) / 0.2; // normalize 0..1
-        CdWave = 0.02 * Math.pow(machRise, 2); // smooth quadratic rise
+    if (mach > 0.75) {
+        const machRise = (mach - 0.75) / 0.25; // normalize 0..1
+        CdWave = 0.08 * Math.pow(machRise, 3); // smooth quadratic rise
     }
 
     return CdParasitic + CdInduced + CdWave;
@@ -129,6 +129,16 @@ export class Aircraft {
 
     // --- ANGLES OF ATTACK / SIDESLIP ---
     const velBody = this.velocity.clone().applyQuaternion(q.clone().invert());
+
+    const rotationalInfluence = new THREE.Vector3(
+      this.angularVelocity.z * this.wingspan * 0.25, // roll effect
+      0,
+      this.angularVelocity.x * this.wingspan * 0.25  // pitch effect
+    );
+
+    // apply in body space
+    velBody.add(rotationalInfluence);
+    
     const alpha = Math.atan2(-velBody.y, -velBody.z);
     const forwardSpeed = Math.max(-velBody.z, 5);
     const beta = THREE.MathUtils.clamp(Math.atan2(-velBody.x, forwardSpeed), -0.5, 0.5);
@@ -160,8 +170,6 @@ export class Aircraft {
     // --- VELOCITY UPDATE ---
     const accel = totalForce.multiplyScalar(1/this.mass);
     this.velocity.addScaledVector(accel, dt);
-    this.velocity.multiplyScalar(0.999); // drag stabilization
-    this.velocity.clampLength(0, 250);
 
     // --- CONTROL INPUTS AS TORQUE ---
     const maxTorque = 2.0; // limit angular acceleration
@@ -195,13 +203,14 @@ export class Aircraft {
 
     // --- POSITION UPDATE ---
     this.plane.position.addScaledVector(this.velocity, dt);
-
+    
+    const planebox = new THREE.Box3().setFromObject(this.plane);
     // --- GROUND COLLISION ---
-    if (this.plane.position.y <= elevation) {
-        this.plane.position.y = elevation;
+    if (planebox.min.y <= elevation) {
+        this.plane.position.y = elevation + (this.plane.position.y - planebox.min.y);
         if (this.velocity.y < 0) this.velocity.y = 0;
-        this.velocity.x *= 0.7;
-        this.velocity.z *= 0.7;
+        this.velocity.x *= 0.9;
+        this.velocity.z *= 0.9;
         this.angularVelocity.multiplyScalar(0.3);
     }
   }

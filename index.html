@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Flyby 1.0.0</title>
+	<title>Flyby 1</title>
 	<link rel="icon" href="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/32x32/object_cube.png" type="image/x-icon" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
@@ -36,7 +36,7 @@
 			font-size: 40px;
 			font-family: courier new, monaco;
 			left: 30px;
-			bottom: 30px;
+			bottom: 40px;
 			display: none;
 		}
 		#vy {
@@ -48,7 +48,7 @@
 			font-size: 40px;
 			font-family: courier new, monaco;
 			left: 30px;
-			bottom: 60px;
+			bottom: 70px;
 			display: none;
 		}
 		#alt {
@@ -60,7 +60,7 @@
 			font-size: 40px;
 			font-family: courier new, monaco;
 			left: 30px;
-			bottom: 90px;
+			bottom: 100px;
 			display: none;
 		}
 		#seaalt {
@@ -72,7 +72,67 @@
 			font-size: 40px;
 			font-family: courier new, monaco;
 			left: 30px;
-			bottom: 120px;
+			bottom: 130px;
+			display: none;
+		}
+                #mach {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			left: 30px;
+			bottom: 10px;
+			display: none;
+		}
+                #engine1 {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			right: 210px;
+			top: 100px;
+			display: none;
+		}
+                #engine2 {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			right: 30px;
+			top: 100px;
+			display: none;
+		}
+                #status1 {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			right: 210px;
+			top: 130px;
+			display: none;
+		}
+                #status2 {
+			position: fixed;
+			align-items: center;
+			color: #4AF262;
+			z-index: 20;
+			pointer-events: none;
+			font-size: 40px;
+			font-family: courier new, monaco;
+			right: 30px;
+			top: 130px;
 			display: none;
 		}
 		#creditsModal {
@@ -101,12 +161,41 @@
 			font-weight: bold;
 			cursor: pointer;
 		}
+                #helpModal {
+			display: none;
+			position: fixed;
+			z-index: 1000;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			overflow: auto;
+			background-color: rgba(0, 0, 0, 0.6);
+		}
+		#helpContent {
+			background-color: #fff;
+			margin: 10% auto;
+			padding: 20px;
+			border-radius: 8px;
+			width: 80%;
+			max-width: 500px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+		}
+		#closeHelp {
+			float: right;
+			font-size: 20px;
+			font-weight: bold;
+			cursor: pointer;
+		}
 	</style>
 	<div id="loading">
 		Loading...
 	</div>
 	<div id="velocity">
 		VELOCITY: _ KTS
+	</div>
+	<div id="mach">
+		MACH NO: MACH _
 	</div>
 	<div id="vy">
 		VERTICAL SPEED: _ FT/S
@@ -116,6 +205,18 @@
 	</div>
 	<div id="seaalt">
 		ALTITUDE (GROUND-RELATIVE): _ FT
+	</div>
+        <div id="engine1">
+		ENG 1
+	</div>
+        <div id="engine2">
+		ENG 2
+	</div>
+        <div id="status1">
+		THRUST
+	</div>
+        <div id="status2">
+		THRUST
 	</div>
 	<button onclick="document.getElementById('creditsModal').style.display='block'" style="
 		position: fixed;
@@ -130,6 +231,35 @@
 			<h2>Credits</h2>
 			<p>3D Graphics by Three.js</p>
 			<p>Tree by Zsky [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/uxSb2WTPU4)</p>
+		</div>
+	</div>
+        <button onclick="document.getElementById('helpModal').style.display='block'" style="
+		position: fixed;
+		top: 5%;
+		left: 5%;
+	">
+		View Help
+	</button>
+	<div id="helpModal">
+		<div id="helpContent">
+			<span id="closeHelp" onclick="document.getElementById('helpModal').style.display='none'">&times;</span>
+			<h2>Help</h2>
+			<p>Click to begin control</p>
+			<p>Absolute altitude = height above sea level</p>
+			<p>AGL = height above ground</p>
+			<p>Ascent/descent rate = how fast you're falling/rising</p>
+			<p>Velocity = total speed</p>
+			<p>Mach No = speed in Mach</p>
+			<p>The sphere at the bottom right shows attitude</p>
+			<p>Top right "eng 1" and "eng 2" spaces show engine status</p>
+			<p>Mouse forward/back = nose down/up</p>
+			<p>Mouse left/right = roll left/right</p>
+			<p>Q/E = nose left/right</p>
+			<p>W/S = nose up/down</p>
+                        <p>A/D = roll left/right</p>
+			<p>Up/down arrow = throttle up/down</p>
+			<p>"1" key = engine 1 on/off</p>
+			<p>"2" key = engine 2 on/off</p>
 		</div>
 	</div>
 	<script type="importmap">
